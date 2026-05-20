@@ -1,5 +1,6 @@
 """News & Macro Engine — economic calendar + macro headlines."""
 from __future__ import annotations
+from app.utils_time import utc_now
 import httpx, feedparser
 from datetime import datetime
 from app.config import settings
@@ -15,8 +16,8 @@ async def upcoming_events() -> list[dict]:
     if not settings.TRADING_ECONOMICS_KEY:
         # Static placeholder — replace with ForexFactory scrape in prod
         return [
-            {"time": datetime.utcnow().isoformat(), "currency": "USD", "event": "CPI m/m", "impact": "high", "forecast": "0.3%", "previous": "0.4%"},
-            {"time": datetime.utcnow().isoformat(), "currency": "EUR", "event": "ECB Press Conference", "impact": "high", "forecast": "-", "previous": "-"},
+            {"time": utc_now().isoformat(), "currency": "USD", "event": "CPI m/m", "impact": "high", "forecast": "0.3%", "previous": "0.4%"},
+            {"time": utc_now().isoformat(), "currency": "EUR", "event": "ECB Press Conference", "impact": "high", "forecast": "-", "previous": "-"},
         ]
     async with httpx.AsyncClient(timeout=10) as c:
         r = await c.get(f"https://api.tradingeconomics.com/calendar?c={settings.TRADING_ECONOMICS_KEY}&f=json")
