@@ -1,0 +1,2 @@
+-- Phase 18 introduces governance/control APIs and policy logic.
+-- No mandatory schema changes required for baseline rollout.

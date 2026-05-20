@@ -22,6 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
             <div className="p-4 md:p-6">{children}</div>
+            <div className="px-4 md:px-6 pb-4 text-xs text-muted">
+              Personal signal assistant only. Not financial advice. Does not execute trades.
+            </div>
           </main>
         </div>
       </body>

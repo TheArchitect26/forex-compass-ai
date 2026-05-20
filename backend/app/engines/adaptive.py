@@ -5,6 +5,7 @@ fingerprint (regime + structure state + dominant pattern). Then adjust the
 runtime weight used by `confidence.py`.
 """
 from __future__ import annotations
+from app.utils_time import utc_now
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
@@ -31,7 +32,7 @@ async def record_outcome(db: AsyncSession, signal: dict) -> dict:
     wr = row.wins / total
     # weight: shrink confidence multiplier toward 0.5..1.5 based on observed edge
     row.weight = max(0.5, min(1.5, 0.5 + wr))
-    row.updated_at = datetime.utcnow()
+    row.updated_at = utc_now()
     await db.commit()
     return {"key": key, "wins": row.wins, "losses": row.losses, "weight": row.weight}
 

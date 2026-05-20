@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "change-me"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ALLOW_ANONYMOUS_AUTH: bool = False
+
+    # HTTP / CORS
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
     # Notifications
     TELEGRAM_BOT_TOKEN: str = ""
@@ -34,6 +41,20 @@ class Settings(BaseSettings):
         "USD/CAD", "USD/CHF", "NZD/USD", "XAU/USD",
     ]
     TIMEFRAMES: list[str] = ["1min", "5min", "15min", "30min", "1h", "4h", "1day"]
+
+    # Signal discipline
+    MIN_SIGNAL_CONFIDENCE: float = 60.0
+    SIGNAL_COOLDOWN_MINUTES: int = 30
+    ALLOW_SYNTHETIC_SIGNALS: bool = False
+    DEFAULT_SLIPPAGE_PIPS: float = 0.5
+    COMMISSION_PER_TRADE: float = 0.0
+    XAU_PIP_SIZE: float = 0.1
+    DEFAULT_SPREAD_PIPS: dict[str, float] = {
+        "EUR/USD": 1.0,
+        "GBP/USD": 1.3,
+        "USD/JPY": 1.2,
+        "XAU/USD": 3.0,
+    }
 
 
 settings = Settings()

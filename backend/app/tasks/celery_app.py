@@ -12,6 +12,9 @@ celery_app = Celery(
 celery_app.conf.timezone = "UTC"
 celery_app.conf.beat_schedule = {
     "scan-market-every-5min": {"task": "app.tasks.jobs.scan_market", "schedule": 300.0},
+    "validate-outcomes-every-10min": {"task": "app.tasks.jobs.validate_outcomes", "schedule": 600.0},
+    "reliability-snapshot-every-30min": {"task": "app.tasks.jobs.snapshot_reliability", "schedule": 1800.0},
+    "maintenance-every-hour": {"task": "app.tasks.jobs.run_maintenance", "schedule": 3600.0},
     "ingest-news-every-15min": {"task": "app.tasks.jobs.ingest_news", "schedule": 900.0},
     "retrain-daily": {"task": "app.tasks.jobs.retrain_ml", "schedule": crontab(hour=2, minute=0)},
 }
