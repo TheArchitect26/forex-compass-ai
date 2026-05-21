@@ -7,6 +7,7 @@ from redis.asyncio import from_url as redis_from_url
 from app.db import init_db
 from app.config import settings
 from app.api import auth, market, signals, analysis, journal, news, sentiment, backtest, learning, performance, ws, strategies, audit, versions, experiments, data, replay, system, research, strategic, cognitive, governance, meta, reality, context, attention, temporal, synthesis, foresight, scenario, pathways, causal, ecosystem, operations, architecture, refactoring, evolution, metagovernance, trustcalibration, purpose, wisdom, resilience, debt, release, observability, controlplane, ux, memory, compression, evaluation, evolution_control, feature_flags, platform_catalog, scorecards, golden_paths, change_control, post_implementation, policies, audit_trail, evidence
+from app.api import auth, market, signals, analysis, journal, news, sentiment, backtest, learning, performance, ws, strategies, audit, versions, experiments, data, replay, system, research, strategic, cognitive, governance, meta, reality, context, attention, temporal, synthesis, foresight, scenario, pathways, causal, ecosystem
 
 
 @asynccontextmanager
@@ -90,6 +91,7 @@ app.include_router(post_implementation.router, prefix="/api/post-implementation"
 app.include_router(policies.router, prefix="/api/policies", tags=["policies"])
 app.include_router(audit_trail.router, prefix="/api/audit-trail", tags=["audit-trail"])
 app.include_router(evidence.router, prefix="/api/evidence", tags=["evidence"])
+app.include_router(meta.router, prefix="/api/meta", tags=["meta"])
 
 
 @app.get("/")
