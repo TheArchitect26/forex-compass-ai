@@ -5,6 +5,7 @@ Falls back to deterministic synthetic data if no key is configured, so the
 system runs end-to-end in dev without external dependencies.
 """
 from __future__ import annotations
+from app.utils_time import utc_now
 import asyncio
 from datetime import datetime, timedelta
 from typing import Literal
@@ -22,6 +23,8 @@ class MarketDataEngine:
     def __init__(self):
         self._client = httpx.AsyncClient(timeout=15.0)
         self._cache: dict[tuple, tuple[datetime, pd.DataFrame]] = {}
+        self._last_source: dict[tuple[str, str, int], str] = {}
+        self._last_warning: dict[tuple[str, str, int], str | None] = {}
 
     async def close(self): await self._client.aclose()
 
@@ -29,18 +32,32 @@ class MarketDataEngine:
         key = (pair, timeframe, limit)
         if key in self._cache:
             ts, df = self._cache[key]
-            if datetime.utcnow() - ts < timedelta(seconds=30):
+            if utc_now() - ts < timedelta(seconds=30):
                 return df
         df = await self._fetch(pair, timeframe, limit)
-        self._cache[key] = (datetime.utcnow(), df)
+        self._cache[key] = (utc_now(), df)
         return df
+
+    def source_info(self, pair: str, timeframe: Timeframe, limit: int) -> dict:
+        key = (pair, timeframe, limit)
+        source = self._last_source.get(key, "synthetic")
+        warning = self._last_warning.get(key)
+        return {"source": source, "warning": warning}
 
     async def _fetch(self, pair: str, timeframe: Timeframe, limit: int) -> pd.DataFrame:
         if settings.TWELVE_DATA_API_KEY:
             try:
-                return await self._twelve(pair, timeframe, limit)
+                df = await self._twelve(pair, timeframe, limit)
+                self._last_source[(pair, timeframe, limit)] = "twelve_data"
+                self._last_warning[(pair, timeframe, limit)] = None
+                return df
             except Exception as e:
                 logger.warning(f"Twelve Data failed: {e}; falling back to synthetic")
+                self._last_source[(pair, timeframe, limit)] = "synthetic"
+                self._last_warning[(pair, timeframe, limit)] = "Twelve Data request failed; using synthetic demo data."
+                return self._synthetic(pair, timeframe, limit)
+        self._last_source[(pair, timeframe, limit)] = "synthetic"
+        self._last_warning[(pair, timeframe, limit)] = "TWELVE_DATA_API_KEY missing; using synthetic demo data."
         return self._synthetic(pair, timeframe, limit)
 
     async def _twelve(self, pair: str, timeframe: Timeframe, limit: int) -> pd.DataFrame:
@@ -71,7 +88,7 @@ class MarketDataEngine:
         rng = np.random.default_rng(seed)
         base = {"XAU/USD": 2350.0, "USD/JPY": 155.0}.get(pair, 1.1)
         minutes = _TF_MIN[timeframe]
-        end = datetime.utcnow().replace(second=0, microsecond=0)
+        end = utc_now().replace(second=0, microsecond=0)
         idx = pd.date_range(end=end, periods=limit, freq=f"{minutes}min")
         returns = rng.normal(0, 0.0008, size=limit)
         close = base * np.exp(np.cumsum(returns))

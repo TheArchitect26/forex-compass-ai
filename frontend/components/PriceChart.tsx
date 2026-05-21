@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { createChart, CandlestickSeries, ColorType, type IChartApi } from "lightweight-charts";
+import { createChart, ColorType } from "lightweight-charts";
 import { api } from "@/lib/api";
 
 type Candle = { time: number; open: number; high: number; low: number; close: number };
