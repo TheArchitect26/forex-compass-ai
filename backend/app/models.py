@@ -191,7 +191,7 @@ class ExperimentRun(Base):
     config_snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
     strategy_profile: Mapped[str] = mapped_column(String(32), default="")
     regime_conditions: Mapped[dict] = mapped_column(JSON, default=dict)
-    replay_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    replay_metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     comparison_results: Mapped[dict] = mapped_column(JSON, default=dict)
     regression_analysis: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
@@ -314,72 +314,18 @@ class ResearchWorkload(Base):
 
 class ResearchGraphEdge(Base):
     __tablename__ = "research_graph_edges"
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    source_type: Mapped[str] = mapped_column(String(32), index=True)
-    source_id: Mapped[str] = mapped_column(String(64), index=True)
-    target_type: Mapped[str] = mapped_column(String(32), index=True)
-
-
-class FeatureFlagAudit(Base):
-    __tablename__ = "feature_flag_audits"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    audit_name: Mapped[str] = mapped_column(String(128), default="phase54_feature_flag_governance")
-    advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
-    auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
-
-
-class FeatureFlagRegistryItem(Base):
-    __tablename__ = "feature_flag_registry_items"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    flag_name: Mapped[str] = mapped_column(String(128), index=True)
-    lifecycle_state: Mapped[str] = mapped_column(String(32), index=True)
-    capability_controlled: Mapped[str] = mapped_column(String(255), default="")
-    owner: Mapped[str] = mapped_column(String(128), default="")
-    intended_lifespan_days: Mapped[int] = mapped_column(Integer, default=30)
-    cleanup_due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
-    affected_systems: Mapped[list] = mapped_column(JSON, default=list)
-    default_state: Mapped[str] = mapped_column(String(16), default="off")
-    rollback_role: Mapped[str] = mapped_column(String(255), default="")
-    operator_visibility: Mapped[str] = mapped_column(String(32), default="medium")
-    advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
-    auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
-
-
-class FeatureFlagCleanupPlan(Base):
-    __tablename__ = "feature_flag_cleanup_plans"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    flag_name: Mapped[str] = mapped_column(String(128), index=True)
-    lifecycle_state: Mapped[str] = mapped_column(String(32), index=True)
-    capability_controlled: Mapped[str] = mapped_column(String(255), default="")
-    owner: Mapped[str] = mapped_column(String(128), default="")
-    intended_lifespan_days: Mapped[int] = mapped_column(Integer, default=30)
-    cleanup_due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
-    affected_systems: Mapped[list] = mapped_column(JSON, default=list)
-    default_state: Mapped[str] = mapped_column(String(16), default="off")
-    rollback_role: Mapped[str] = mapped_column(String(255), default="")
-    operator_visibility: Mapped[str] = mapped_column(String(32), default="medium")
-    advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
-    auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     target_id: Mapped[str] = mapped_column(String(64), index=True)
     relation: Mapped[str] = mapped_column(String(64), default="related_to")
     weight: Mapped[float] = mapped_column(Float, default=1.0)
-    metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-
-
 
 
 class FeatureFlagCleanupPlan(Base):
     __tablename__ = "feature_flag_cleanup_plans"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     flag_key: Mapped[str] = mapped_column(String(80), index=True)
     current_state: Mapped[str] = mapped_column(String(32), default="active")
@@ -388,6 +334,7 @@ class FeatureFlagCleanupPlan(Base):
     rollback_strategy: Mapped[str] = mapped_column(Text, default="")
     operator_approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+
 
 class StrategicBriefing(Base):
     __tablename__ = "strategic_briefings"
@@ -548,7 +495,7 @@ class RenewalWorkflow(Base):
     auditable: Mapped[bool] = mapped_column(Boolean, default=True)
     reproducible: Mapped[bool] = mapped_column(Boolean, default=True)
     reversible: Mapped[bool] = mapped_column(Boolean, default=True)
-    metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
 

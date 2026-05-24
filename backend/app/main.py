@@ -95,7 +95,6 @@ app.include_router(post_implementation.router, prefix="/api/post-implementation"
 app.include_router(policies.router, prefix="/api/policies", tags=["policies"])
 app.include_router(audit_trail.router, prefix="/api/audit-trail", tags=["audit-trail"])
 app.include_router(evidence.router, prefix="/api/evidence", tags=["evidence"])
-app.include_router(meta.router, prefix="/api/meta", tags=["meta"])
 
 
 @app.get("/")
