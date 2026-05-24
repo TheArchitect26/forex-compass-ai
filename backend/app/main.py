@@ -6,6 +6,7 @@ from redis.asyncio import from_url as redis_from_url
 
 from app.db import init_db
 from app.config import settings
+from app.api import auth, market, signals, analysis, journal, news, sentiment, backtest, learning, performance, ws, strategies, audit, versions, experiments, data, replay, system, research, strategic, cognitive, governance, meta, reality, context, attention, temporal, synthesis, foresight, scenario, pathways, causal, ecosystem, operations, architecture, refactoring, evolution, metagovernance, trustcalibration, purpose, wisdom, resilience, debt, release, observability, controlplane, ux, memory, compression, evaluation, evolution_control, feature_flags, platform_catalog, scorecards, golden_paths, change_control, post_implementation, policies, audit_trail, evidence
 from app.api import auth, market, signals, analysis, journal, news, sentiment, backtest, learning, performance, ws, strategies, audit, versions, experiments, data, replay, system, research, strategic, cognitive, governance, meta, reality, context, attention, temporal, synthesis, foresight, scenario, pathways, causal, ecosystem
 
 
@@ -62,6 +63,34 @@ app.include_router(scenario.router, prefix="/api/scenario", tags=["scenario"])
 app.include_router(pathways.router, prefix="/api/pathways", tags=["pathways"])
 app.include_router(causal.router, prefix="/api/causal", tags=["causal"])
 app.include_router(ecosystem.router, prefix="/api/ecosystem", tags=["ecosystem"])
+app.include_router(operations.router, prefix="/api/operations", tags=["operations"])
+app.include_router(meta.router, prefix="/api/meta", tags=["meta"])
+app.include_router(architecture.router, prefix="/api/architecture", tags=["architecture"])
+app.include_router(refactoring.router, prefix="/api/refactoring", tags=["refactoring"])
+app.include_router(evolution.router, prefix="/api/evolution", tags=["evolution"])
+app.include_router(metagovernance.router, prefix="/api/metagovernance", tags=["metagovernance"])
+app.include_router(trustcalibration.router, prefix="/api/trust-calibration", tags=["trust-calibration"])
+app.include_router(purpose.router, prefix="/api/purpose", tags=["purpose"])
+app.include_router(wisdom.router, prefix="/api/wisdom", tags=["wisdom"])
+app.include_router(resilience.router, prefix="/api/resilience", tags=["resilience"])
+app.include_router(debt.router, prefix="/api/debt", tags=["debt"])
+app.include_router(release.router, prefix="/api/release", tags=["release"])
+app.include_router(observability.router, prefix="/api/observability", tags=["observability"])
+app.include_router(controlplane.router, prefix="/api/control-plane", tags=["control-plane"])
+app.include_router(ux.router, prefix="/api/ux", tags=["ux"])
+app.include_router(memory.router, prefix="/api/memory", tags=["memory"])
+app.include_router(compression.router, prefix="/api/compression", tags=["compression"])
+app.include_router(evaluation.router, prefix="/api/evaluation", tags=["evaluation"])
+app.include_router(evolution_control.router, prefix="/api/evolution-control", tags=["evolution-control"])
+app.include_router(feature_flags.router, prefix="/api/feature-flags", tags=["feature-flags"])
+app.include_router(platform_catalog.router, prefix="/api/platform-catalog", tags=["platform-catalog"])
+app.include_router(scorecards.router, prefix="/api/scorecards", tags=["scorecards"])
+app.include_router(golden_paths.router, prefix="/api/golden-paths", tags=["golden-paths"])
+app.include_router(change_control.router, prefix="/api/change-control", tags=["change-control"])
+app.include_router(post_implementation.router, prefix="/api/post-implementation", tags=["post-implementation"])
+app.include_router(policies.router, prefix="/api/policies", tags=["policies"])
+app.include_router(audit_trail.router, prefix="/api/audit-trail", tags=["audit-trail"])
+app.include_router(evidence.router, prefix="/api/evidence", tags=["evidence"])
 app.include_router(meta.router, prefix="/api/meta", tags=["meta"])
 
 
