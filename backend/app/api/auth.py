@@ -16,6 +16,8 @@ class Creds(BaseModel):
 
 @router.post("/register")
 async def register(c: Creds, db: AsyncSession = Depends(get_db)):
+    if len(c.password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
     exists = (await db.execute(select(User).where(User.email == c.email))).scalar_one_or_none()
     if exists: raise HTTPException(400, "Email already registered")
     u = User(email=c.email, hashed_password=hash_password(c.password))

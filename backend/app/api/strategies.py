@@ -6,6 +6,7 @@ from app.db import get_db
 from app.models import StrategyState
 from app.utils_time import utc_now
 from app.engines.strategy_profiles import PROFILES, profile_or_default
+from app.security import current_user
 
 router = APIRouter()
 
@@ -32,7 +33,7 @@ class SelectProfile(BaseModel):
 
 
 @router.post("/select")
-async def select_profile(body: SelectProfile, db: AsyncSession = Depends(get_db)):
+async def select_profile(body: SelectProfile, db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     if body.profile not in PROFILES:
         raise HTTPException(400, "Unknown profile")
     row = await _ensure_state(db)

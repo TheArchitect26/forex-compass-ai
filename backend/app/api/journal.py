@@ -4,6 +4,7 @@ from sqlalchemy import select, desc
 from pydantic import BaseModel
 from app.db import get_db
 from app.models import JournalEntry
+from app.security import current_user
 
 router = APIRouter()
 
@@ -28,7 +29,7 @@ async def list_entries(db: AsyncSession = Depends(get_db), limit: int = 100):
 
 
 @router.post("")
-async def add_entry(body: JournalIn, db: AsyncSession = Depends(get_db)):
+async def add_entry(body: JournalIn, db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     e = JournalEntry(**body.model_dump())
     db.add(e); await db.commit(); await db.refresh(e)
     return {"id": e.id}
