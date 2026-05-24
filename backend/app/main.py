@@ -12,6 +12,10 @@ from app.api import auth, market, signals, analysis, journal, news, sentiment, b
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    env = (settings.APP_ENV or "").lower()
+    unsafe_secrets = {"", "change-me", "changeme", "default", "secret", "jwt-secret", "change-me-to-a-long-random-string"}
+    if env not in {"local", "dev", "test"} and settings.JWT_SECRET.strip().lower() in unsafe_secrets:
+        raise RuntimeError("Unsafe or missing JWT_SECRET for non-local environment")
     await init_db()
     yield
 
@@ -50,8 +54,8 @@ app.include_router(data.router, prefix="/api/data", tags=["data"])
 app.include_router(replay.router, prefix="/api/replay", tags=["replay"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
 app.include_router(research.router, prefix="/api/research", tags=["research"])
-app.include_router(strategic.router, prefix="/api/system", tags=["strategic"])
-app.include_router(cognitive.router, prefix="/api/system", tags=["cognitive"])
+app.include_router(strategic.router, prefix="/api/strategic", tags=["strategic"])
+app.include_router(cognitive.router, prefix="/api/cognitive", tags=["cognitive"])
 app.include_router(governance.router, prefix="/api/governance", tags=["governance"])
 app.include_router(reality.router, prefix="/api/governance", tags=["reality"])
 app.include_router(context.router, prefix="/api/context", tags=["context"])
