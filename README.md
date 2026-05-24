@@ -39,6 +39,23 @@ docker compose up --build
 - Frontend: http://localhost:3000
 - API docs: http://localhost:8000/docs
 
+
+## Local Development & Validation
+
+For Codespaces/local reproducibility:
+
+```bash
+bash scripts/dev-setup.sh
+bash scripts/validate-local.sh
+```
+
+Validation script runs:
+
+```bash
+python -m compileall backend/app
+PYTHONPATH=.:backend pytest -q backend/tests/test_critical_stabilization_patch.py backend/tests/test_environment_smoke.py
+```
+
 ## Modules
 
 See `backend/app/engines/` — each module has its own package with a clear interface. Adding a new indicator, ML model, or data provider is a single-file change.
