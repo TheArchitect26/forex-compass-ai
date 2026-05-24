@@ -19,10 +19,11 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/2"
 
     # Auth
-    JWT_SECRET: str = "change-me"
+    JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ALLOW_ANONYMOUS_AUTH: bool = False
+    APP_ENV: str = "local"
 
     # HTTP / CORS
     CORS_ORIGINS: list[str] = [

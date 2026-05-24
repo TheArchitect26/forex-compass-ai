@@ -321,9 +321,22 @@ class ResearchGraphEdge(Base):
     target_id: Mapped[str] = mapped_column(String(64), index=True)
     relation: Mapped[str] = mapped_column(String(64), default="related_to")
     weight: Mapped[float] = mapped_column(Float, default=1.0)
-    metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
+
+
+
+class FeatureFlagCleanupPlan(Base):
+    __tablename__ = "feature_flag_cleanup_plans"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    flag_key: Mapped[str] = mapped_column(String(80), index=True)
+    current_state: Mapped[str] = mapped_column(String(32), default="active")
+    deprecation_stage: Mapped[str] = mapped_column(String(32), default="planned")
+    affected_components: Mapped[list] = mapped_column(JSON, default=list)
+    rollback_strategy: Mapped[str] = mapped_column(Text, default="")
+    operator_approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
 class StrategicBriefing(Base):
     __tablename__ = "strategic_briefings"
@@ -484,7 +497,7 @@ class RenewalWorkflow(Base):
     auditable: Mapped[bool] = mapped_column(Boolean, default=True)
     reproducible: Mapped[bool] = mapped_column(Boolean, default=True)
     reversible: Mapped[bool] = mapped_column(Boolean, default=True)
-    metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
 

@@ -39,6 +39,23 @@ docker compose up --build
 - Frontend: http://localhost:3000
 - API docs: http://localhost:8000/docs
 
+
+## Local Development & Validation
+
+For Codespaces/local reproducibility:
+
+```bash
+bash scripts/dev-setup.sh
+bash scripts/validate-local.sh
+```
+
+Validation script runs:
+
+```bash
+python -m compileall backend/app
+PYTHONPATH=.:backend pytest -q backend/tests/test_critical_stabilization_patch.py backend/tests/test_environment_smoke.py
+```
+
 ## Modules
 
 See `backend/app/engines/` — each module has its own package with a clear interface. Adding a new indicator, ML model, or data provider is a single-file change.
@@ -72,11 +89,14 @@ cp .env.example .env
 
 Required keys/settings:
 - `TWELVE_DATA_API_KEY` (required for real live candles)
-- `JWT_SECRET`
+- `JWT_SECRET` (required outside `APP_ENV=local|dev|test`; use a long random value)
+- `APP_ENV` (`local` for development; set `prod`/`staging` in deployed environments)
 - `DATABASE_URL`
 - `REDIS_URL`
 
 If `TWELVE_DATA_API_KEY` is empty, the API returns synthetic demo candles and includes a warning in `/api/market/ohlcv`.
+
+Security guard: backend startup fails in non-local environments when `JWT_SECRET` is missing or set to an unsafe default.
 
 ### 3) Run with Docker
 

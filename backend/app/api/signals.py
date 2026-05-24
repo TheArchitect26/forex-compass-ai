@@ -15,6 +15,7 @@ from app.engines.reliability import classify_alignment, reliability_score
 from app.engines.pipeline import run_signal_pipeline_for_pair, config_snapshot
 from app.engines.strategy_profiles import profile_or_default
 from app.engines.session import classify_session
+from app.security import current_user
 
 router = APIRouter()
 
@@ -28,7 +29,7 @@ async def list_signals(db: AsyncSession = Depends(get_db), limit: int = 50):
 
 
 @router.post("/scan")
-async def scan(db: AsyncSession = Depends(get_db)):
+async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     """Run unified pipeline over all pairs."""
     found = []
     for p in settings.PAIRS:
@@ -40,12 +41,12 @@ async def scan(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/scan")
-async def scan_get(db: AsyncSession = Depends(get_db)):
-    return await scan(db)
+async def scan_get(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
+    return await scan(db, _user)
 
 
 @router.post("/validate-outcomes")
-async def validate_outcomes(db: AsyncSession = Depends(get_db)):
+async def validate_outcomes(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     return await validate_pending_outcomes(db)
 
 
