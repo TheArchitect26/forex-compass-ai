@@ -833,3 +833,533 @@ Principles:
 - No-execution guarantee: ecosystem outputs are advisory-only
 
 This phase adds dependency mapping, ecosystem risk scoring, fallback planning, environmental pressure detection, ecosystem memory, persistence models/migration, tests, and an Ecosystem Console.
+
+## Phase 36 Operational Orchestration and Strategic Maintenance
+
+Phase 36 introduces operational orchestration to manage review cadence, deferred actions, maintenance discipline, and overdue institutional work without autonomous execution.
+
+Principles:
+- Operational reminders support discipline; they are not hard requirements
+- Review cadence prevents drift and backlog accumulation
+- Deferred-action governance keeps delay risk visible and reversible
+- Maintenance discipline preserves long-horizon system reliability
+- Human review is required before operational changes are adopted
+- No-execution guarantee: operations outputs are advisory-only
+
+This phase adds operations review planning, deferred-action scoring, maintenance cycle generation, cadence checks, persistence models/migration, tests, and an Operations Console.
+
+
+## Phase 37 Architectural Coherence
+
+- Adds architectural coherence APIs under `/api/architecture` for status, overlap scan, consolidation planning, simplification risk, and architecture memory.
+- Introduces Phase 37 data models and SQL migration for architecture audits, subsystem overlap findings, and consolidation proposals.
+- Adds an Architecture frontend console to surface coherence scores, overlap warnings, consolidation proposals, simplification risks, and high-burden subsystems.
+- All outputs are advisory-only with explicit no-execution safeguards; no automatic consolidation or refactoring actions are applied.
+
+
+## Phase 38 Refactoring Intelligence and Architectural Recovery
+
+Phase 38 adds institutional refactoring intelligence focused on architectural entropy reduction and long-horizon maintainability recovery while preserving human control.
+
+Principles:
+- Architectural entropy naturally accumulates without active simplification and coherence management.
+- Erosion signals should be surfaced early through advisory diagnostics, not autonomous code rewriting.
+- Simplification should prioritize reversibility, migration clarity, and operator burden reduction.
+- Recovery analysis coordinates entropy, coupling, drift, hotspot, and boundary findings to guide human-reviewed interventions.
+- Refactoring remains human-controlled because architecture changes have non-local risk and contextual trade-offs.
+- No-execution guarantee: the platform never auto-deletes code, auto-runs migrations, auto-merges modules, or auto-changes architecture.
+
+
+## Phase 39 Evolutionary Resilience and Transition Governance
+
+Phase 39 introduces evolutionary resilience and transition governance so major platform changes can preserve mission coherence, operator trust, explainability, and institutional continuity over time.
+
+Principles:
+- Evolutionary resilience treats transitions as governance events, not just technical deployments.
+- Transition governance surfaces risk before consolidation, rewrites, and provider migrations proceed.
+- Continuity preservation prioritizes memory, mission anchors, audit trails, replay compatibility, learning history, operator notes, governance rationale, and data lineage.
+- Rollback-readiness discipline requires checkpoints, backups, compatibility checks, and explicit review gates.
+- Human approval is required before transition actions are adopted.
+- No-execution guarantee: the platform never auto-runs migrations, auto-deletes legacy systems, auto-rewrites architecture, or auto-changes mission/governance.
+
+
+## Phase 40 Meta-Governance Harmonization
+
+Phase 40 adds meta-governance (governance-of-governance) to harmonize safeguards, resolve policy conflicts, and preserve institutional coherence as governance layers scale.
+
+Principles:
+- Meta-governance coordinates governance systems so policy intent remains aligned and traceable.
+- Policy-conflict detection identifies contradictions across escalation, defer/simplify, consolidation, and review pathways.
+- Safeguard consistency requires standardized advisory-only, auto-apply, and human-review semantics across layers.
+- Doctrine hierarchy guides conflict resolution: no execution, human judgment final, advisory-only, explainability/auditability, reversibility, reality-grounding, mission integrity, and operator cognitive-load respect.
+- Human review is required for harmonization and doctrine updates.
+- No-execution guarantee: the platform never auto-changes governance policy, auto-disables safeguards, auto-approves conflicts, or auto-rewrites doctrine.
+
+
+## Phase 41 Institutional Trust Calibration
+
+Phase 41 introduces institutional trust calibration to align operator trust with demonstrated system trustworthiness, avoiding both overtrust (misuse) and undertrust (disuse).
+
+Principles:
+- Trust calibration evaluates whether recommendation confidence is deserved and proportionate to evidence quality.
+- Overtrust/undertrust risk is monitored through confidence calibration, uncertainty honesty, false-alarm burden, and missed-warning burden.
+- Uncertainty transparency requires explicit separation of facts, estimates, assumptions, weak signals, speculative forecasts, and low-confidence conclusions.
+- Recommendation legitimacy discipline evaluates evidence strength, actionability, proportionality, reversibility, historical usefulness, operator burden, and overreach risk.
+- Human review is required before legitimacy outcomes are adopted.
+- No-execution guarantee: the platform never auto-suppresses warnings, auto-approves recommendations, auto-increases confidence, or overrides operator judgment.
+
+
+## Phase 42 Purpose Coherence and Meaning Preservation
+
+Phase 42 introduces purpose coherence and meaning-preservation governance to protect mission integrity as system complexity grows.
+
+Principles:
+- Mission drift prevention requires continuous auditing of whether features and recommendations still serve core operator purpose.
+- Purpose-coherence evaluation tracks when intelligence/governance expansion outpaces practical mission usefulness.
+- Anti-hollowing discipline identifies symbolic governance, low-value complexity, and recommendation inflation that do not improve decisions.
+- Doctrine embodiment checks compare stated values against recommendations, API safeguards, UI behavior, README claims, and tests.
+- Human review is required for purpose-level decisions and mission-alignment interventions.
+- No-execution guarantee: the platform never auto-deletes features, auto-rewrites mission, auto-retires dashboards, or auto-changes governance.
+
+
+## Phase 43 Institutional Wisdom and Strategic Judgment
+
+Phase 43 introduces institutional wisdom support to improve judgment under ambiguity and uncertainty while preserving restraint, prudence, and operator sovereignty.
+
+Principles:
+- Wisdom discipline avoids false certainty by explicitly mapping what is known, uncertain, assumed, and not yet concludeable.
+- Ambiguity navigation prioritizes reflective reasoning over reactive optimization under incomplete evidence.
+- Prudence and restraint checks reduce overreaction, premature pathway selection, and excessive confidence language.
+- Strategic judgment emphasizes long-term consequence awareness, reversibility, proportionality, moderation, and mission alignment.
+- Human review is required for judgment-level recommendations.
+- No-execution guarantee: the platform never auto-decides, auto-suppresses critical warnings, auto-selects pathways, inflates confidence, or overrides operator judgment.
+
+
+## Phase 44 Existential Resilience and Crisis Continuity
+
+Phase 44 introduces existential resilience and crisis continuity governance so the platform can preserve mission integrity and operator clarity under black-swan disruptions and cascading failures.
+
+Principles:
+- Existential resilience extends continuity by emphasizing adaptation, mission survival, and judgment quality under extreme uncertainty.
+- Crisis-continuity planning defines degraded-mode operation and minimum viable institution mode to preserve critical safeguards and decision support.
+- Black-swan governance detects invalidated assumptions, fragile dependencies, false certainty, governance contradictions, and crisis alert overload.
+- Minimum viable institution mode prioritizes no execution, human judgment final, data survival, mission continuity, critical alerts only, operator cognitive safety, audit preservation, and recovery readiness.
+- Human review is required for crisis actions and recovery decisions.
+- No-execution guarantee: the platform never auto-triggers crisis mode, auto-disables systems, auto-deletes data, auto-changes governance, or auto-executes recovery.
+
+
+## Phase 45 Technical Debt Observatory
+
+Phase 45 introduces a technical debt observatory to classify and prioritize maintainability risk across code, architecture, migrations, dependencies, tests, and operational surfaces.
+
+Principles:
+- Preventive maintenance reduces long-run fragility, rework cost, and operational risk.
+- Debt observability should convert complexity signals into actionable, human-reviewed paydown priorities.
+- Dependency/build fragility requires proactive detection of version drift, platform mismatch, and environment inconsistencies.
+- Paydown planning emphasizes risk reduction, maintainability gains, and staged execution over disruptive rewrites.
+- Human review is required for debt prioritization and paydown decisions.
+- No-execution guarantee: the platform never auto-deletes code, auto-changes dependencies, auto-runs migrations, or auto-rewrites architecture.
+
+
+## Phase 46 Release Governance and Deployment Safety
+
+Phase 46 adds an advisory-only release governance layer to evaluate build/deployment/rollback safety before production changes.
+
+- **Release-governance philosophy:** release intelligence provides structured risk visibility, but final release authority remains with humans.
+- **Production-readiness rationale:** deployments can fail from dependency drift, missing env vars, migration mismatch, and route/config divergence; explicit readiness scoring helps reduce surprises.
+- **Rollback discipline:** each release should include a human-reviewed rollback path with commit reversion, dependency lock restoration, and post-rollback validation.
+- **Environment-readiness principles:** required env variables, API base URL alignment, and serverless compatibility assumptions must be validated before rollout.
+- **Human-review requirement:** release actions require explicit human approval; no autonomous deployment control is allowed.
+- **No-execution guarantee:** this platform remains signal-intelligence only and never executes trades.
+
+
+## Phase 47 Runtime Observability and Post-Deployment Monitoring
+
+Phase 47 introduces an advisory-only runtime observability layer for post-deployment monitoring and production feedback intelligence.
+
+- **Observability philosophy:** detect runtime instability quickly, summarize impact clearly, and preserve human-led operational decisions.
+- **Post-release monitoring rationale:** deployment success is incomplete without continuous checks for uptime, latency, endpoint reliability, and route compatibility.
+- **Regression-detection principles:** track route failures, API base URL mismatch, serverless routing mismatches, missing runtime env vars, import/runtime dependency failures, and repeated 500/404 bursts.
+- **Incident-summary discipline:** provide likely issue, affected routes, severity, suspected cause, rollback relevance, and debugging next steps in a consistent operator-facing structure.
+- **Human-review requirement:** observability outputs require explicit human approval for any operational action.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+
+## Phase 48 Unified Operator Control Plane
+
+Phase 48 introduces a unified operator control plane to reduce dashboard sprawl, console fragmentation, and cognitive overload while preserving human judgment.
+
+- **Control-plane philosophy:** aggregate institutional signals into a coherent operator summary without removing human decision authority.
+- **Dashboard-sprawl rationale:** fragmented consoles increase navigation burden, context switching, and delayed responses; grouped views improve operational clarity.
+- **Cognitive-load reduction principles:** prioritize top actions, suppress low-value noise, preserve critical warnings, and defer low-impact work.
+- **Focus-view discipline:** provide context-specific views (Executive, Release/Runtime, Governance, Architecture/Maintenance, Strategy/Intelligence, Crisis/Resilience, Minimal Daily) without hiding critical signals.
+- **Human-review requirement:** consolidation and navigation simplification remain advisory and require explicit human approval before any operational change.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+
+## Phase 49 Operator Experience and Usability Quality
+
+Phase 49 introduces an advisory-only UX quality layer to audit usability friction, navigation burden, readability risk, and interface coherence across the expanding console surface.
+
+- **UX-quality philosophy:** simplify operator experience while preserving transparency, warning visibility, and human control.
+- **Usability heuristic rationale:** evaluate status visibility, language clarity, consistency, hierarchy, warning clarity, recognition over memory, minimalism, and documentation usefulness.
+- **Navigation-burden principles:** reduce context switching, clarify grouping, and establish a clear daily-use pathway centered on the Control Plane.
+- **Interface simplification discipline:** standardize card structures and score meanings, reduce repeated copy, and define Daily/Maintenance/Crisis views without automatic UI mutation.
+- **Human-review requirement:** UX changes are recommendations only and require explicit human approval.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+
+## Phase 50 Institutional Memory Retrieval
+
+Phase 50 adds an institutional memory retrieval layer so operators can quickly recall prior lessons, decisions, incidents, warnings, assumptions, and phase context across a growing governance and operations surface.
+
+- **Memory-retrieval philosophy:** surface relevant historical context at decision time without automating judgment or action.
+- **Knowledge-indexing rationale:** categorize memory into phase history, decisions, lessons, warnings, assumptions, incidents, migrations, recommendations, governance rationale, operator context, and unresolved issues.
+- **Contextual recall principles:** return related lessons/decisions/incidents/assumptions/warnings/phases with scoring and explicit human review recommendations.
+- **Staleness-review discipline:** identify outdated assumptions, superseded decisions, stale migration notes, and lessons needing revalidation before reuse.
+- **Human-review requirement:** memory cleanup and interpretation remain human-approved actions only.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+
+## Phase 51 Knowledge Compression and Strategic Recall Optimization
+
+Phase 51 introduces advisory-only knowledge compression so institutional memory remains high-signal, strategically useful, and cognitively manageable as historical data grows.
+
+- **Knowledge-compression philosophy:** preserve meaning and critical nuance while reducing repetition and overload.
+- **Why retrieval alone is insufficient:** finding records is necessary but not enough; institutions also need durable distillation and operator-friendly heuristics.
+- **Strategic-distillation rationale:** repeated lessons and recurring failures should be converted into concise guidance that improves future decisions.
+- **Anti-pattern preservation discipline:** recurring anti-patterns are explicitly tracked so complexity loops and warning inflation remain visible.
+- **Human-review requirement:** archival/compression actions require explicit human approval.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+
+## Phase 52 Institutional Evaluation and Maturity Measurement
+
+Phase 52 introduces an advisory-only institutional evaluation layer to benchmark whether the platform is actually improving across usability, reliability, governance, memory quality, and strategic usefulness.
+
+- **Evaluation philosophy:** convert goals into measurable indicators while keeping human judgment final.
+- **Benchmarking rationale:** continuous feedback on usability, release safety, runtime reliability, and cognitive load helps prioritize meaningful improvements.
+- **Maturity-measurement principles:** track current vs target scores, evidence, trend, maturity level, and recommended improvements by category.
+- **Regression-review discipline:** explicitly detect setbacks (navigation burden, debt growth, weaker clarity/safety) instead of hiding them.
+- **Human-review requirement:** maturity claims and improvement plans require explicit human review and approval.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+
+## Phase 53 Controlled Evolution and Capability Stewardship
+
+Phase 53 adds an advisory-only controlled-evolution layer to govern what should evolve, freeze, consolidate, retire later, or remain stable based on evidence, operator value, maturity, and institutional purpose.
+
+- **Controlled-evolution philosophy:** growth must be deliberate and evidence-based, not driven by unchecked expansion.
+- **Capability-lifecycle rationale:** classify capabilities across experimental/active/stable/frozen/deprecated/retirement or consolidation candidates to reduce ambiguity.
+- **Freeze/retire/consolidate discipline:** preserve high-value stable systems, merge overlaps, and defer retirement until human-reviewed evidence supports it.
+- **Why more features are not always better:** unmanaged expansion increases cognitive burden, technical debt, and governance contradictions.
+- **Human-review requirement:** all lifecycle changes require explicit human approval.
+- **No-execution guarantee:** this platform remains signal intelligence only and never executes trades.
+
+## Phase 54 Feature Flag Governance and Toggle Hygiene
+
+Phase 54 introduces explicit feature-flag governance so flags remain a safety mechanism, not an accumulating debt layer.
+
+### Governance philosophy
+- Feature flags are treated as temporary control surfaces that must have clear intent, ownership, and retirement discipline.
+- Governance outputs are decision support for operators, never autonomous changes.
+
+### Toggle-debt rationale
+- Unmanaged toggles increase cognitive load and operational risk.
+- Debt grows when flags outlive their purpose, lack owners, or diverge between environments.
+
+### Lifecycle and ownership principles
+- Every flag should include lifecycle state, owner, capability controlled, intended lifespan, and visibility level.
+- Lifecycle progression should be explicit (for example: proposed -> experimental -> rollout -> stable -> cleanup_due -> stale -> deprecated).
+
+### Cleanup discipline
+- Each flag requires a cleanup due date and periodic stale-review.
+- Cleanup planning should prioritize ownerless, obsolete, and duplicate flags first.
+
+### Rollout-safety principles
+- Rollout assessments should include blast radius, rollback usefulness, compatibility risk, and monitoring readiness.
+- Rollout safety is a checklist process with explicit human sign-off.
+
+### Human-review requirement
+- Phase 54 is advisory-only and human-approval-gated for all decisions.
+- Automated execution of flag lifecycle actions is intentionally disallowed.
+
+### No-execution guarantee
+- The system will never auto-enable flags.
+- The system will never auto-disable flags.
+- The system will never auto-delete flags.
+- The system will never auto-change rollout state.
+- The system will never auto-change production behavior.
+
+## Phase 55 Internal Platform Catalog and Golden Path Governance
+
+Phase 55 introduces an internal platform catalog so engines, APIs, consoles, migrations, tests, ownership, lifecycle state, and operational pathways can be discovered from a single registry.
+
+### Platform catalog philosophy
+- Institutional governance benefits from one discoverability layer for capability inventory, ownership, dependencies, and operational pathways.
+- Catalog outputs are advisory scorecards and registry visibility, never autonomous platform changes.
+
+### Ownership and discoverability rationale
+- Ownership clarity reduces orphaned systems and maintenance ambiguity.
+- Discoverability reduces cognitive load by exposing where each capability lives and how it is validated.
+
+### Dependency-map principles
+- Dependency maps should show upstream dependencies, downstream dependents, related subsystems, and coupling risk.
+- Changes to high-coupling systems should require explicit human review before rollout.
+
+### Golden path discipline
+- Standard golden paths should exist for adding phases, APIs, consoles, migrations, governance engines, runtime changes, and capability retirement.
+- Golden paths must include required files, tests, README updates, router registration checks, validation commands, and rollback notes.
+
+### Human-review requirement
+- Platform catalog governance remains advisory-only.
+- Human approval is required for ownership updates, router registration changes, migration decisions, and lifecycle transitions.
+
+### No-execution guarantee
+- The platform catalog layer never auto-creates files.
+- The platform catalog layer never auto-deletes capabilities.
+- The platform catalog layer never auto-changes ownership.
+- The platform catalog layer never auto-registers routers.
+- The platform catalog layer never auto-runs migrations.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 56 Scorecard Governance and Production Readiness Standards
+
+Phase 56 introduces scorecard governance so platform catalog knowledge is translated into measurable readiness and quality-gate standards.
+
+### Scorecard philosophy
+- Scorecards convert governance expectations into explicit, repeatable standards across engines, APIs, frontend consoles, migrations, tests, and ownership.
+- Scorecards remain advisory support for human operators and reviewers.
+
+### Readiness-gate rationale
+- Readiness gates reduce hidden risk by checking owner, lifecycle state, documentation, test coverage, migration alignment, routing, and frontend visibility.
+- Gate reviews surface gaps early so teams can remediate before broader rollout.
+
+### Production-readiness principles
+- Production-readiness should be measured with evidence: validation commands, observability coverage, release checks, and ownership clarity.
+- Pass/fail outcomes must include severity and improvement priority to guide human decisions.
+
+### Evidence-based quality governance
+- Findings should include evidence strength and category-level scoring so remediation can be prioritized by impact.
+- Improvement plans should target concrete actions (tests, docs, ownership, router registration, observability, validation hardening).
+
+### Human-review requirement
+- Quality-gate decisions require human approval.
+- No automatic acceptance, lifecycle mutation, migration execution, or router registration changes are permitted.
+
+### No-execution guarantee
+- The scorecard layer never auto-passes capabilities.
+- The scorecard layer never auto-changes lifecycle state.
+- The scorecard layer never auto-creates files.
+- The scorecard layer never auto-registers routers.
+- The scorecard layer never auto-runs migrations.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 57 Golden Path Workflows and Safe Change Playbooks
+
+Phase 57 introduces reusable workflow playbooks that convert catalog and scorecard standards into practical, human-reviewed execution guidance.
+
+### Golden-path philosophy
+- Golden paths provide opinionated guidance for recurring institutional changes while preserving human judgment.
+- They reduce ambiguity by offering repeatable, safety-oriented workflow templates.
+
+### Why standard workflows reduce cognitive load
+- Standard workflow templates reduce context switching and tribal knowledge dependency.
+- Teams can execute safer changes faster when file/test/router/migration/README expectations are explicit.
+
+### Checklist discipline
+- Every workflow should include required files, tests, docs updates, migration/router/sidebar needs, validation commands, rollback notes, and scorecard checks.
+- Checklist completion should be reviewed by a human before execution.
+
+### Deviation-review discipline
+- Deviations are allowed when justified, but must document reason, introduced risk, affected standards, compensating controls, and rollback/recovery notes.
+- Deviations require explicit human review and approval.
+
+### Human-review requirement
+- Workflow guidance is advisory only.
+- No workflow should be forced or applied automatically without human approval.
+
+### No-execution guarantee
+- The golden-path layer never auto-creates files.
+- The golden-path layer never auto-runs commands.
+- The golden-path layer never auto-commits changes.
+- The golden-path layer never auto-registers routers.
+- The golden-path layer never auto-runs migrations.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 58 Change Impact Analysis and Institutional Change Control
+
+Phase 58 introduces a change-impact and institutional change-control layer that evaluates proposed work before implementation.
+
+### Change-control philosophy
+- Change control should improve decision quality by making risk, dependencies, readiness, and rollback expectations visible before changes are executed.
+- The system provides advisory analysis and review structure, not autonomous change decisions.
+
+### Change-impact rationale
+- Pre-implementation impact analysis reduces avoidable incidents by identifying affected systems, dependency coupling, migration exposure, and review needs.
+- Structured approval briefs help reviewers compare risk if approved versus risk if deferred.
+
+### Review-board discipline
+- Changes should be triaged through appropriate review lanes (normal, release, architecture, migration, UX, governance, emergency, rollback).
+- Review requirements should be explicit and documented as part of the approval package.
+
+### Rollback-readiness requirement
+- Every non-trivial change should include rollback ownership, rollback steps, and rollback validation commands.
+- Rollback readiness is required before implementation approval.
+
+### Human-approval requirement
+- No change decision is final without human approval.
+- The platform can recommend review urgency and risk posture but cannot approve/reject on behalf of operators.
+
+### No-execution guarantee
+- The change-control layer never auto-approves changes.
+- The change-control layer never auto-rejects changes.
+- The change-control layer never runs commands.
+- The change-control layer never creates commits.
+- The change-control layer never deploys changes.
+- The change-control layer never executes rollback actions.
+- The change-control layer never runs migrations.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 59 Post-Implementation Review and Closed-Loop Improvement
+
+Phase 59 introduces a post-implementation review layer to evaluate completed changes and close the learning loop.
+
+### PIR philosophy
+- Post-implementation review should compare plan versus reality and capture durable institutional lessons.
+- PIR outputs support human review and learning; they do not autonomously alter production behavior.
+
+### Expected-vs-actual rationale
+- Comparing expected versus actual outcomes reveals hidden risk, process gaps, and improvement opportunities.
+- Explicit comparison across systems, risk, operator impact, validation, rollback, and realized benefit improves future planning quality.
+
+### Lessons-learned discipline
+- Lessons should be captured in reusable form and routed to golden paths, scorecards, release governance, change control, observability, feature-flag hygiene, platform catalogs, UX quality, debt management, memory retrieval, and knowledge compression.
+- Repeated lessons should be compressed into actionable heuristics.
+
+### Closed-loop improvement principle
+- PIR findings should drive concrete improvement actions (tests, validation hardening, checklist updates, rollback playbook updates, ownership/lifecycle clarity).
+- Improvement actions require human prioritization and approval before implementation.
+
+### Human-review requirement
+- PIR conclusions and improvement actions require human review.
+- No automatic closure of actions or autonomous policy mutation is permitted.
+
+### No-execution guarantee
+- The PIR layer never rewrites history.
+- The PIR layer never auto-closes improvement actions.
+- The PIR layer never auto-changes scorecards.
+- The PIR layer never auto-updates golden paths.
+- The PIR layer never auto-runs commands.
+- The PIR layer never deploys or executes rollbacks.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 60 Institutional Policy Engine and Governance Doctrine
+
+Phase 60 introduces a formal institutional policy and doctrine layer to preserve stable constitutional governance as the platform evolves.
+
+### Constitutional-governance philosophy
+- Institutional doctrine defines durable, non-negotiable operating constraints that outlast individual implementation phases.
+- Governance is advisory constitutional guidance with human judgment final in all operational decisions.
+
+### Doctrine rationale
+- Formal doctrine reduces ambiguity by making safeguards, review obligations, escalation rules, and operational protections explicit.
+- Stable doctrine helps maintain long-term consistency under changing features and workflows.
+
+### Why institutional rules must outlive individual phases
+- Phase-level implementations evolve quickly, but constitutional constraints must remain stable to protect continuity, accountability, and safety.
+- Long-lived policy baselines prevent drift and conflicting operational behavior across subsystems.
+
+### Human sovereignty principles
+- Human approval is required for governance-impacting and operationally significant changes.
+- Operator sovereignty is protected by explicit anti-automation boundaries and transparent review duties.
+
+### Anti-automation doctrine
+- Advisory-only by default.
+- Auto-apply disabled by default.
+- No autonomous deployment, rollback, governance mutation, or hidden operator-impacting behavior.
+
+### Operational continuity principles
+- Rollback and recovery planning is required.
+- Observability is required for operational systems.
+- Persistence changes require migrations.
+- Operational capabilities require tests.
+- Governance-impacting changes require README documentation updates.
+
+### Human-review requirement
+- Policy compliance and doctrine conflict outcomes require human review and approval.
+- Doctrine changes are never autonomous.
+
+### No-execution guarantee
+- The policy layer never auto-enforces destructive actions.
+- The policy layer never auto-deletes capabilities.
+- The policy layer never auto-changes governance states.
+- The policy layer never auto-approves compliance.
+- The policy layer never auto-rewrites doctrine.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 61 Institutional Audit Trail and Decision Provenance
+
+Phase 61 introduces institutional audit-trail and decision-provenance tracking so operators can trace governance reasoning over time.
+
+### Audit-trail philosophy
+- Every governance recommendation should preserve a trace of what was proposed, why it was produced, and which evidence supported it.
+- Audit outputs improve accountability and continuity without automating decisions.
+
+### Decision-provenance rationale
+- Provenance chains reduce ambiguity by linking recommendations to policy references, review inputs, scorecard evidence, and change-control rationale.
+- Explicit assumptions and conflict visibility improve reviewer confidence and historical interpretability.
+
+### Governance traceability
+- Traceability links policy, scorecards, change control, post-implementation learning, and governance lineage into one reviewable history.
+- Lineage records help future operators understand institutional reasoning evolution across phases.
+
+### History-preservation discipline
+- Institutional history must remain append-only in practice: no silent rewrites and no hidden conflict suppression.
+- Audit corrections require explicit human approval.
+
+### Human-review requirement
+- Governance decisions remain human-reviewed and advisory.
+- Provenance and lineage signals support humans; they do not replace human judgment.
+
+### No-execution guarantee
+- The audit layer never rewrites history.
+- The audit layer never deletes audit events.
+- The audit layer never auto-approves decisions.
+- The audit layer never hides governance conflicts.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
+
+## Phase 62 Evidence Registry and Audit-Ready Control Mapping
+
+Phase 62 introduces an evidence registry that links institutional risk, controls, evidence, and governance records into an audit-ready chain.
+
+### Evidence-registry philosophy
+- Governance readiness requires structured evidence, not only logs.
+- Evidence should be traceable, attributable, and reviewable across policy, control, decision, and operational layers.
+
+### Risk-control-evidence rationale
+- Risk should map to explicit controls.
+- Controls should map to evidence.
+- Evidence should map to policy and audit lineage.
+- This chain improves accountability and review confidence.
+
+### Chain-of-custody discipline
+- Evidence paths should preserve source origin, linked decisions/policies/controls/reviews, and timestamp trails.
+- Gaps and weak links should be made visible for human remediation.
+
+### Audit-readiness principles
+- Detect missing, stale, or unlinked evidence.
+- Detect controls without proof and decisions/releases/scorecards/audit events without supporting evidence.
+- Keep evidence freshness and linkage quality visible.
+
+### Human-review requirement
+- Evidence corrections require human approval.
+- Compliance outcomes are advisory and human-reviewed.
+
+### No-execution guarantee
+- The evidence layer never fabricates evidence.
+- The evidence layer never deletes evidence.
+- The evidence layer never rewrites evidence history.
+- The evidence layer never auto-marks incomplete evidence as complete.
+- The evidence layer never auto-approves compliance.
+- This remains a personal research and signal intelligence platform only; it never executes trades.
