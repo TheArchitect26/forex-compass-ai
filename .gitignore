@@ -23,3 +23,13 @@ frontend/.vercel/
 .env
 .env.*
 !.env.example
+
+# Frontend build output
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+
+# Local env files
+.env
+.env.*
+!.env.example
