@@ -1,4 +1,6 @@
 node_modules/
+.venv/
+*.tsbuildinfo
 
 # Python cache artifacts
 __pycache__/
