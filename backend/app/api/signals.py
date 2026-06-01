@@ -69,17 +69,59 @@ async def status(db: AsyncSession = Depends(get_db)):
 async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     """Run unified pipeline over all pairs."""
     found = []
+    real_count = 0
+    cached_count = 0
+    synthetic_demo_count = 0
+    unavailable_count = 0
+    provider_failed_symbols = []
     for p in settings.PAIRS:
-        sig = await run_signal_pipeline_for_pair(db, p, source="api_scan")
+        sig = await run_signal_pipeline_for_pair(db, p, source="api_scan", report_unavailable=True)
         if sig:
             found.append(sig)
+            if sig.get("provider_failed"):
+                unavailable_count += 1
+                provider_failed_symbols.append(p)
+            elif sig.get("demo_only") or sig.get("data_mode") == "synthetic_demo" or sig.get("data_source") == "synthetic":
+                synthetic_demo_count += 1
+            elif sig.get("data_mode") == "cached" or sig.get("provider_name") == "cached_provider":
+                cached_count += 1
+            elif sig.get("data_source") == "real" or sig.get("provider_name") == "twelve_data":
+                real_count += 1
     await db.commit()
-    return {"found": len(found), "signals": found}
+    data_mode = _scan_data_mode(real_count, cached_count, synthetic_demo_count, unavailable_count)
+    return {
+        "found": len(found),
+        "signals": found,
+        "real_count": real_count,
+        "cached_count": cached_count,
+        "synthetic_demo_count": synthetic_demo_count,
+        "unavailable_count": unavailable_count,
+        "provider_failed_symbols": provider_failed_symbols,
+        "data_mode": data_mode,
+        "auto_trade": False,
+        "no_execution": True,
+        "advisory_only": True,
+    }
 
 
 @router.get("/scan")
 async def scan_get(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     return await scan(db, _user)
+
+
+def _scan_data_mode(real_count: int, cached_count: int, synthetic_demo_count: int, unavailable_count: int) -> str:
+    active = sum(1 for n in [real_count, cached_count, synthetic_demo_count, unavailable_count] if n > 0)
+    if active > 1:
+        return "mixed"
+    if real_count:
+        return "live"
+    if cached_count:
+        return "cached"
+    if synthetic_demo_count:
+        return "synthetic_demo"
+    if unavailable_count:
+        return "unavailable"
+    return "unavailable"
 
 
 @router.post("/validate-outcomes")

@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import timedelta
 from sqlalchemy import select, desc
 from app.config import settings
-from app.config import synthetic_buy_sell_blocked
+from app.config import has_real_market_provider, is_production_like, synthetic_buy_sell_blocked
 from app.models import Signal, ExplainabilityAudit, HistoricalCandle, SignalScanContext, StrategyState
 from app.engines.market_data import market_data
 from app.engines.signal_intelligence import analyze_pair
@@ -17,17 +17,41 @@ async def get_active_profile(db) -> dict:
     return profile_or_default(state.active_profile if state else "intraday")
 
 
-async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan") -> dict | None:
+async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan", report_unavailable: bool = False) -> dict | None:
     profile = await get_active_profile(db)
     res = await analyze_pair(pair)
     if not res.get("signal"):
         return None
     s = res["signal"]
+    source_info = market_data.source_info(s["pair"], s["timeframe"], 200)
+    provider_name = source_info.get("source") or s["data_source"]
+    provider_failed = (
+        has_real_market_provider()
+        and provider_name == "synthetic"
+        and "Twelve Data request failed" in (source_info.get("warning") or "")
+    )
+    if provider_failed and is_production_like():
+        if report_unavailable:
+            return {
+                "pair": pair,
+                "direction": "UNAVAILABLE",
+                "timeframe": s["timeframe"],
+                "data_source": "unavailable",
+                "data_mode": "unavailable",
+                "provider_name": "twelve_data",
+                "provider_failed": True,
+                "demo_only": False,
+                "execution_grade": False,
+                "warning": source_info.get("warning") or "Twelve Data request failed.",
+            }
+        return None
     before = s["confidence"]
     s = apply_quality_gates(s, profile["min_confidence"])
     allow_synthetic_signals = settings.ALLOW_SYNTHETIC_SIGNALS and not synthetic_buy_sell_blocked()
     if blocked_by_synthetic_policy(s, allow_synthetic_signals):
         return None
+    demo_only = s["data_source"] == "synthetic" or provider_name == "synthetic"
+    data_mode = "synthetic_demo" if demo_only else "provider"
 
     cooldown_since = utc_now() - timedelta(minutes=profile["cooldown_minutes"])
     existing = (await db.execute(select(Signal).where(Signal.pair == s["pair"], Signal.timeframe == s["timeframe"], Signal.created_at >= cooldown_since).order_by(desc(Signal.created_at)))).scalars().first()
@@ -38,6 +62,10 @@ async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan") 
     s.setdefault("reasoning", {})["profile"] = profile["name"]
     s["reasoning"]["config_snapshot"] = snap
     s["reasoning"]["source_path"] = source
+    s["data_mode"] = data_mode
+    s["provider_name"] = provider_name
+    s["demo_only"] = demo_only
+    s["execution_grade"] = not demo_only
 
     row = Signal(
         pair=s["pair"], direction=s["direction"], timeframe=s["timeframe"],
@@ -50,10 +78,6 @@ async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan") 
     db.add(row)
     await db.flush()
 
-    source_info = market_data.source_info(s["pair"], s["timeframe"], 200)
-    provider_name = source_info.get("source") or s["data_source"]
-    demo_only = s["data_source"] == "synthetic" or provider_name == "synthetic"
-    data_mode = "synthetic_demo" if demo_only else "provider"
     snapshot = await _persist_signal_candle_snapshot(db, s["pair"], s["timeframe"], provider_name, demo_only)
     db.add(SignalScanContext(
         signal_id=row.id,

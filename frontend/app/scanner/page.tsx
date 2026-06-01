@@ -14,6 +14,14 @@ type SignalStatus = {
     synthetic_demo?: { total: number; pending: number; win_rate: number };
   };
 };
+type ScanSummary = {
+  data_mode: string;
+  real_count: number;
+  cached_count: number;
+  synthetic_demo_count: number;
+  unavailable_count: number;
+  provider_failed_symbols: string[];
+};
 
 export default function ScannerPage() {
   const [heat, setHeat] = useState<Heat[]>([]);
@@ -22,6 +30,7 @@ export default function ScannerPage() {
   const [warning, setWarning] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<SignalStatus | null>(null);
+  const [scanSummary, setScanSummary] = useState<ScanSummary | null>(null);
   useEffect(() => {
     const tick = async () => {
       setLoading(true);
@@ -40,10 +49,18 @@ export default function ScannerPage() {
     };
     tick(); const t = setInterval(tick, 15000); return () => clearInterval(t);
   }, []);
+  const runScan = async () => {
+    const result = await api<ScanSummary>(`/api/signals/scan`, { method: "POST" });
+    setScanSummary(result);
+  };
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Live Market Scanner</h1>
       <p className="text-xs text-muted">Refreshes every 15 seconds. Signal Assistant mode (analysis only).</p>
+      <div className="flex items-center gap-2">
+        <button onClick={runScan} className="px-3 py-1 rounded bg-accent text-bg text-xs">Run signal scan</button>
+        {status?.data_mode && <span className="text-xs text-muted">Status mode: {status.data_mode}</span>}
+      </div>
       {loading && <div className="text-xs text-accent bg-panel2 border border-border rounded p-2">Loading scanner data…</div>}
       {!loading && !error && <div className="text-xs text-bull bg-bull/10 border border-bull/30 rounded p-2">Scanner updated successfully{updatedAt ? ` at ${updatedAt}` : ""}.</div>}
       {warning && <div className="text-xs text-yellow-400 bg-yellow-950/30 border border-yellow-700 rounded p-2">{warning}</div>}
@@ -66,6 +83,22 @@ export default function ScannerPage() {
             <div className="text-xs text-muted">synthetic/demo records are separated from provider stats</div>
           </Card>
         </div>
+      )}
+      {scanSummary && (
+        <Card>
+          <CardTitle>Latest scan data mode: {scanSummary.data_mode}</CardTitle>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div>Live: <span className="font-mono">{scanSummary.real_count}</span></div>
+            <div>Cached: <span className="font-mono">{scanSummary.cached_count}</span></div>
+            <div>Demo: <span className="font-mono">{scanSummary.synthetic_demo_count}</span></div>
+            <div>Unavailable: <span className="font-mono">{scanSummary.unavailable_count}</span></div>
+          </div>
+          {scanSummary.provider_failed_symbols.length > 0 && (
+            <div className="text-xs text-yellow-400 mt-2">
+              Provider failed: {scanSummary.provider_failed_symbols.join(", ")}
+            </div>
+          )}
+        </Card>
       )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {heat.map(h => (

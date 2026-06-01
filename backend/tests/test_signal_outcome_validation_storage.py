@@ -85,7 +85,9 @@ def test_missing_future_candles_stays_pending():
         async with maker() as db:
             await _add_signal(db, with_future=False)
             result = await validate_pending_outcomes(db)
+            assert result["provider_candidates"] == 1
             assert result["missing_data"] == 1
+            assert result["provider_pending"] == 1
             assert result["pending"] == 1
             assert result["validated"] == 0
     _run(case())
@@ -98,8 +100,22 @@ def test_synthetic_demo_signal_is_skipped():
             await _add_signal(db, demo_only=True)
             result = await validate_pending_outcomes(db)
             assert result["skipped_demo"] == 1
-            assert result["pending"] == 1
+            assert result["provider_pending"] == 0
+            assert result["pending"] == 0
             assert result["validated"] == 0
+    _run(case())
+
+
+def test_hold_signal_is_skipped_from_win_loss_validation():
+    async def case():
+        maker = await _session()
+        async with maker() as db:
+            await _add_signal(db, direction="HOLD", with_future=True)
+            result = await validate_pending_outcomes(db)
+            assert result["skipped_hold"] == 1
+            assert result["provider_candidates"] == 0
+            assert result["wins"] == 0
+            assert result["losses"] == 0
     _run(case())
 
 
@@ -109,6 +125,7 @@ def test_provider_backed_future_candles_validate_win():
         async with maker() as db:
             await _add_signal(db, direction="SELL")
             result = await validate_pending_outcomes(db)
+            assert result["provider_candidates"] == 1
             assert result["validated"] == 1
             assert result["wins"] == 1
             assert result["auto_trade"] is False
