@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 from backend.app.engines.outcome_rules import evaluate_outcome
+from app.engines.outcome_validation import classify_threshold_outcome
 
 
 class OutcomeValidationTests(unittest.TestCase):
@@ -33,6 +34,22 @@ class OutcomeValidationTests(unittest.TestCase):
         trade = [o for o in outcomes if o["direction"] in {"BUY", "SELL"} and o["outcome"] in {"win", "loss", "expired"}]
         wins = sum(1 for o in trade if o["outcome"] == "win")
         self.assertEqual(round(wins / len(trade) * 100, 2), 50.0)
+
+    def test_threshold_buy_win_loss_pending(self):
+        win = classify_threshold_outcome("BUY", "EUR/USD", 1.1000, [{"high": 1.1045, "low": 1.0995}], horizon_candles=2, take_profit_pips=40, stop_loss_pips=25)
+        loss = classify_threshold_outcome("BUY", "EUR/USD", 1.1000, [{"high": 1.1010, "low": 1.0970}], horizon_candles=2, take_profit_pips=40, stop_loss_pips=25)
+        pending = classify_threshold_outcome("BUY", "EUR/USD", 1.1000, [], horizon_candles=2, take_profit_pips=40, stop_loss_pips=25)
+        self.assertEqual(win["outcome"], "win")
+        self.assertEqual(loss["outcome"], "loss")
+        self.assertEqual(pending["outcome"], "pending")
+
+    def test_threshold_sell_win_loss_pending(self):
+        win = classify_threshold_outcome("SELL", "EUR/USD", 1.1000, [{"high": 1.1005, "low": 1.0955}], horizon_candles=2, take_profit_pips=40, stop_loss_pips=25)
+        loss = classify_threshold_outcome("SELL", "EUR/USD", 1.1000, [{"high": 1.1030, "low": 1.0990}], horizon_candles=2, take_profit_pips=40, stop_loss_pips=25)
+        pending = classify_threshold_outcome("SELL", "EUR/USD", 1.1000, [], horizon_candles=2, take_profit_pips=40, stop_loss_pips=25)
+        self.assertEqual(win["outcome"], "win")
+        self.assertEqual(loss["outcome"], "loss")
+        self.assertEqual(pending["outcome"], "pending")
 
 
 if __name__ == "__main__":

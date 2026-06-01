@@ -5,6 +5,15 @@ import { Card, CardTitle } from "@/components/ui";
 import clsx from "clsx";
 
 type Heat = { pair: string; change_pct: number; price: number };
+type SignalStatus = {
+  pending_validation_count?: number;
+  recent_accuracy?: number;
+  data_mode?: string;
+  validation?: {
+    provider_backed?: { validated: number; pending: number; win_rate: number; loss_rate: number };
+    synthetic_demo?: { total: number; pending: number; win_rate: number };
+  };
+};
 
 export default function ScannerPage() {
   const [heat, setHeat] = useState<Heat[]>([]);
@@ -12,12 +21,14 @@ export default function ScannerPage() {
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [status, setStatus] = useState<SignalStatus | null>(null);
   useEffect(() => {
     const tick = async () => {
       setLoading(true);
       try {
         const sample = await api<any>(`/api/market/ohlcv?pair=EUR/USD&timeframe=1h&limit=2`);
         setWarning(sample.warning || null);
+        setStatus(await api<SignalStatus>(`/api/signals/status`));
         setHeat((await api<{items: Heat[]}>(`/api/market/heatmap`)).items);
         setUpdatedAt(new Date().toLocaleTimeString());
         setError(null);
@@ -37,6 +48,25 @@ export default function ScannerPage() {
       {!loading && !error && <div className="text-xs text-bull bg-bull/10 border border-bull/30 rounded p-2">Scanner updated successfully{updatedAt ? ` at ${updatedAt}` : ""}.</div>}
       {warning && <div className="text-xs text-yellow-400 bg-yellow-950/30 border border-yellow-700 rounded p-2">{warning}</div>}
       {error && <div className="text-xs text-bear bg-bear/10 border border-bear/40 rounded p-2">{error}</div>}
+      {status && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Card>
+            <CardTitle>Validation queue</CardTitle>
+            <div className="text-lg font-mono">{status.pending_validation_count ?? 0}</div>
+            <div className="text-xs text-muted">provider-backed pending outcomes</div>
+          </Card>
+          <Card>
+            <CardTitle>Provider accuracy</CardTitle>
+            <div className="text-lg font-mono">{status.validation?.provider_backed?.win_rate ?? status.recent_accuracy ?? 0}%</div>
+            <div className="text-xs text-muted">{status.validation?.provider_backed?.validated ?? 0} validated records</div>
+          </Card>
+          <Card>
+            <CardTitle>Demo results</CardTitle>
+            <div className="text-lg font-mono">{status.validation?.synthetic_demo?.total ?? 0}</div>
+            <div className="text-xs text-muted">synthetic/demo records are separated from provider stats</div>
+          </Card>
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {heat.map(h => (
           <Card key={h.pair} className={clsx("border-l-4",

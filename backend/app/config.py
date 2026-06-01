@@ -56,6 +56,9 @@ class Settings(BaseSettings):
         "USD/JPY": 1.2,
         "XAU/USD": 3.0,
     }
+    OUTCOME_VALIDATION_HORIZON_CANDLES: int = 24
+    OUTCOME_TAKE_PROFIT_PIPS: float = 40.0
+    OUTCOME_STOP_LOSS_PIPS: float = 25.0
 
 
 settings = Settings()

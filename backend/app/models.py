@@ -105,6 +105,23 @@ class SignalOutcome(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
+class SignalScanContext(Base):
+    __tablename__ = "signal_scan_contexts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    signal_id: Mapped[int] = mapped_column(ForeignKey("signals.id"), unique=True, index=True)
+    symbol: Mapped[str] = mapped_column(String(16), index=True)
+    interval: Mapped[str] = mapped_column(String(8), index=True)
+    signal_timestamp: Mapped[datetime] = mapped_column(DateTime, index=True)
+    direction: Mapped[str] = mapped_column(String(8))
+    confidence: Mapped[float] = mapped_column(Float)
+    entry_price: Mapped[float] = mapped_column(Float)
+    data_mode: Mapped[str] = mapped_column(String(32), default="synthetic_demo", index=True)
+    provider_name: Mapped[str] = mapped_column(String(32), default="synthetic")
+    demo_only: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    candle_snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+
+
 class ValidationRun(Base):
     __tablename__ = "validation_runs"
     id: Mapped[int] = mapped_column(primary_key=True)

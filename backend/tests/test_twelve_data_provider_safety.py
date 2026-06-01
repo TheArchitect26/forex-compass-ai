@@ -56,6 +56,15 @@ def test_scan_requires_auth_in_production_without_provider(monkeypatch) -> None:
     assert res.status_code in {401, 403}
 
 
+def test_validate_outcomes_requires_auth_in_production(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "APP_ENV", "production")
+    monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_AUTH", False)
+
+    res = _client().post("/api/signals/validate-outcomes")
+
+    assert res.status_code in {401, 403}
+
+
 def test_synthetic_buy_sell_blocked_in_production_without_provider(monkeypatch) -> None:
     from app.engines import pipeline
 

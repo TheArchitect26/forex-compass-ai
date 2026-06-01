@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+from sqlalchemy.exc import SQLAlchemyError
 from pydantic import BaseModel
 from datetime import timedelta
 
 from app.db import get_db
 from app.models import Signal
 from app.models import SignalOutcome, ReliabilityHistory, StrategyState, ExplainabilityAudit
+from app.models import SignalScanContext
 from app.config import settings
 from app.config import has_real_market_provider, is_production_like, synthetic_buy_sell_blocked
 from app.engines.adaptive import record_outcome
@@ -30,7 +32,7 @@ async def list_signals(db: AsyncSession = Depends(get_db), limit: int = 50):
 
 
 @router.get("/status")
-async def status():
+async def status(db: AsyncSession = Depends(get_db)):
     real_provider_configured = has_real_market_provider()
     production_like = is_production_like()
     demo_only = not real_provider_configured
@@ -41,6 +43,7 @@ async def status():
         demo_only and not settings.ALLOW_SYNTHETIC_SIGNALS
     )
 
+    stats = await _validation_stats(db)
     return {
         "scanner_ready": live_data_ready or (demo_only and not production_like),
         "live_data_ready": live_data_ready,
@@ -56,6 +59,9 @@ async def status():
         "auto_trade": False,
         "no_execution": True,
         "advisory_only": True,
+        "pending_validation_count": stats["provider_backed"]["pending"],
+        "recent_accuracy": stats["provider_backed"]["win_rate"],
+        "validation": stats,
     }
 
 
@@ -103,6 +109,7 @@ async def performance(db: AsyncSession = Depends(get_db), include_synthetic: boo
             out[k]["wins"] += 1 if o.outcome == "win" else 0
             out[k]["pips"] += o.result_pips
         return out
+    validation = await _validation_stats(db)
     return {
         "total_signals": total,
         "buy_sell_count": sum(1 for o in filtered if o.direction in {"BUY", "SELL"}),
@@ -122,7 +129,13 @@ async def performance(db: AsyncSession = Depends(get_db), include_synthetic: boo
             {"signal_id": o.signal_id, "pair": o.pair, "direction": o.direction, "outcome": o.outcome, "result_pips": o.net_result_pips, "gross_result_pips": o.gross_result_pips, "estimated_cost_pips": o.estimated_cost_pips, "checked_at": o.checked_at.isoformat() if o.checked_at else None}
             for o in sorted(filtered, key=lambda x: x.created_at, reverse=True)[:20]
         ],
+        "validation": validation,
     }
+
+
+@router.get("/validation-stats")
+async def validation_stats(db: AsyncSession = Depends(get_db)):
+    return await _validation_stats(db)
 
 
 
@@ -269,4 +282,59 @@ def _serialize(s: Signal, outcome: SignalOutcome | None = None) -> dict:
         "market_regime": s.market_regime, "reasoning": s.reasoning,
         "explanation": s.explanation, "status": s.status, "pnl_pips": s.pnl_pips,
         "created_at": s.created_at.isoformat(), "closed_at": s.closed_at.isoformat() if s.closed_at else None,
+    }
+
+
+async def _validation_stats(db: AsyncSession) -> dict:
+    try:
+        outcomes = (await db.execute(select(SignalOutcome))).scalars().all()
+        contexts = (await db.execute(select(SignalScanContext))).scalars().all()
+    except SQLAlchemyError:
+        provider = {"total": 0, "validated": 0, "pending": 0, "wins": 0, "losses": 0, "win_rate": 0.0, "loss_rate": 0.0}
+        demo = dict(provider)
+        return {
+            "provider_backed": provider,
+            "synthetic_demo": demo,
+            "recent_accuracy_by_symbol_interval": {},
+            "auto_trade": False,
+            "no_execution": True,
+            "advisory_only": True,
+        }
+    by_signal = {c.signal_id: c for c in contexts}
+
+    def blank():
+        return {"total": 0, "validated": 0, "pending": 0, "wins": 0, "losses": 0, "win_rate": 0.0, "loss_rate": 0.0}
+
+    provider = blank()
+    demo = blank()
+    by_symbol_interval: dict[str, dict] = {}
+
+    for outcome in outcomes:
+        context = by_signal.get(outcome.signal_id)
+        target = demo if (context.demo_only if context else False) else provider
+        key = f"{outcome.pair} {outcome.timeframe}"
+        bucket = by_symbol_interval.setdefault(key, blank())
+        for agg in (target, bucket):
+            agg["total"] += 1
+            if outcome.outcome == "pending":
+                agg["pending"] += 1
+            if outcome.outcome in {"win", "loss"}:
+                agg["validated"] += 1
+            if outcome.outcome == "win":
+                agg["wins"] += 1
+            if outcome.outcome == "loss":
+                agg["losses"] += 1
+
+    for agg in [provider, demo, *by_symbol_interval.values()]:
+        validated = max(1, agg["validated"])
+        agg["win_rate"] = round(agg["wins"] / validated * 100, 2) if agg["validated"] else 0.0
+        agg["loss_rate"] = round(agg["losses"] / validated * 100, 2) if agg["validated"] else 0.0
+
+    return {
+        "provider_backed": provider,
+        "synthetic_demo": demo,
+        "recent_accuracy_by_symbol_interval": by_symbol_interval,
+        "auto_trade": False,
+        "no_execution": True,
+        "advisory_only": True,
     }

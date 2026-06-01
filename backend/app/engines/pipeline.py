@@ -3,7 +3,8 @@ from datetime import timedelta
 from sqlalchemy import select, desc
 from app.config import settings
 from app.config import synthetic_buy_sell_blocked
-from app.models import Signal, ExplainabilityAudit, StrategyState
+from app.models import Signal, ExplainabilityAudit, HistoricalCandle, SignalScanContext, StrategyState
+from app.engines.market_data import market_data
 from app.engines.signal_intelligence import analyze_pair
 from app.engines.signal_discipline import apply_quality_gates, blocked_by_synthetic_policy, is_duplicate_recent
 from app.engines.strategy_profiles import profile_or_default
@@ -47,6 +48,26 @@ async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan") 
         reasoning=s["reasoning"], explanation=s["explanation"], status="open",
     )
     db.add(row)
+    await db.flush()
+
+    source_info = market_data.source_info(s["pair"], s["timeframe"], 200)
+    provider_name = source_info.get("source") or s["data_source"]
+    demo_only = s["data_source"] == "synthetic" or provider_name == "synthetic"
+    data_mode = "synthetic_demo" if demo_only else "provider"
+    snapshot = await _persist_signal_candle_snapshot(db, s["pair"], s["timeframe"], provider_name, demo_only)
+    db.add(SignalScanContext(
+        signal_id=row.id,
+        symbol=s["pair"],
+        interval=s["timeframe"],
+        signal_timestamp=row.created_at,
+        direction=s["direction"],
+        confidence=s["confidence"],
+        entry_price=s["entry"],
+        data_mode=data_mode,
+        provider_name=provider_name,
+        demo_only=demo_only,
+        candle_snapshot=snapshot,
+    ))
     db.add(ExplainabilityAudit(
         pair=s["pair"], timeframe=s["timeframe"], regime=s["market_regime"], strategy_profile=profile["name"],
         signal_decision=s["direction"], confidence_before=before, confidence_after=s["confidence"],
@@ -54,3 +75,40 @@ async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan") 
         reasons=f"{s.get('reason_summary','')} | src={source} | versions={snap}",
     ))
     return s
+
+
+async def _persist_signal_candle_snapshot(db, pair: str, timeframe: str, provider_name: str, demo_only: bool) -> dict:
+    limit = 200
+    df = await market_data.ohlcv(pair, timeframe, limit)
+    rows = []
+    for r in df.itertuples():
+        ts = r.datetime.to_pydatetime() if hasattr(r.datetime, "to_pydatetime") else r.datetime
+        rows.append({
+            "timestamp": ts,
+            "open": float(r.open),
+            "high": float(r.high),
+            "low": float(r.low),
+            "close": float(r.close),
+            "volume": float(getattr(r, "volume", 0.0) or 0.0),
+        })
+    if not demo_only:
+        for c in rows:
+            db.add(HistoricalCandle(
+                pair=pair,
+                timeframe=timeframe,
+                timestamp=c["timestamp"],
+                open=c["open"],
+                high=c["high"],
+                low=c["low"],
+                close=c["close"],
+                volume=c["volume"],
+                source=provider_name,
+                integrity_flags={"scan_context": True},
+            ))
+    return {
+        "rows": len(rows),
+        "first_timestamp": rows[0]["timestamp"].isoformat() if rows else None,
+        "last_timestamp": rows[-1]["timestamp"].isoformat() if rows else None,
+        "source": provider_name,
+        "demo_only": demo_only,
+    }

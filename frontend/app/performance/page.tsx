@@ -61,6 +61,14 @@ export default function PerformancePage() {
         <Stat label="Win rate (ex HOLD)" value={`${data.win_rate_excl_hold}%`} tone={data.win_rate_excl_hold >= 50 ? "bull" : "bear"} />
         <Stat label="Pending outcomes" value={data.pending_outcomes} />
       </div>
+      {data.validation && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat label="Provider validated" value={data.validation.provider_backed.validated} />
+          <Stat label="Provider pending" value={data.validation.provider_backed.pending} />
+          <Stat label="Provider win rate" value={`${data.validation.provider_backed.win_rate}%`} tone={data.validation.provider_backed.win_rate >= 50 ? "bull" : "bear"} />
+          <Stat label="Demo records" value={data.validation.synthetic_demo.total} />
+        </div>
+      )}
       {rel && <div className="text-xs text-muted">Reliability: <b>{rel.score}</b> ({rel.label}) {rel.sample_size < 30 ? "• warning: sample size is small" : ""} {(rel.drift_warnings||[]).length>0 ? `• drift: ${(rel.drift_warnings||[]).join("; ")}` : ""}</div>}
       <div className="text-xs text-muted">Results are estimated from candles with spread/slippage assumptions; not broker-confirmed execution.</div>
       {regimePerf && <Card><CardTitle>Regime performance</CardTitle><div className="text-xs">Best: {regimePerf.best_regime} • Worst: {regimePerf.worst_regime}</div><div className="text-xs mt-1">Sessions tracked: {Object.keys(regimePerf.by_session||{}).length}</div></Card>}
