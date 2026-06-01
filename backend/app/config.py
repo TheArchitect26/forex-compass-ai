@@ -59,3 +59,18 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+DEMO_ENVS = {"local", "dev", "development", "demo", "test"}
+
+
+def is_production_like() -> bool:
+    return (settings.APP_ENV or "").strip().lower() not in DEMO_ENVS
+
+
+def has_real_market_provider() -> bool:
+    return bool(settings.TWELVE_DATA_API_KEY.strip())
+
+
+def synthetic_buy_sell_blocked() -> bool:
+    return is_production_like() and not has_real_market_provider()
