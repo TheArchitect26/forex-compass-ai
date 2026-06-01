@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 from backend.app.engines.regime import detect_details
 from backend.app.engines.signal_intelligence import regime_weight_adjustments
-from backend.app.engines.strategy_profiles import set_active_profile, get_active_profile
+from backend.app.engines.strategy_profiles import profile_or_default
 from backend.app.engines.reliability import reliability_score
 
 
@@ -17,9 +17,9 @@ class Phase6AdaptiveTests(unittest.TestCase):
         r = regime_weight_adjustments("ranging")
         self.assertNotEqual(t["weights"]["rsi"], r["weights"]["rsi"])
 
-    def test_profile_switching(self):
-        set_active_profile("conservative")
-        self.assertEqual(get_active_profile()["name"], "conservative")
+    def test_profile_lookup(self):
+        self.assertEqual(profile_or_default("conservative")["name"], "conservative")
+        self.assertEqual(profile_or_default("missing")["name"], "intraday")
 
     def test_drift_lowers_reliability_semantic(self):
         s1,_ = reliability_score(80, 60, 5, 3)

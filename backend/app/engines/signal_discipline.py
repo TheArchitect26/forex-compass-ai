@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
-from app.utils_time import utc_now
+from app.utils_time import as_utc, utc_now
 
 
 def apply_quality_gates(signal: dict, min_confidence: float) -> dict:
@@ -21,4 +21,4 @@ def blocked_by_synthetic_policy(signal: dict, allow_synthetic: bool) -> bool:
 def is_duplicate_recent(existing_created_at: datetime | None, cooldown_minutes: int) -> bool:
     if not existing_created_at:
         return False
-    return existing_created_at >= utc_now() - timedelta(minutes=cooldown_minutes)
+    return as_utc(existing_created_at) >= utc_now() - timedelta(minutes=cooldown_minutes)

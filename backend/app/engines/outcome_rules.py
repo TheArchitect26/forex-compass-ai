@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from app.config import settings
 from app.engines.pips import pips_from_price_move
+from app.utils_time import as_utc
 
 
 def expiry_window_for_timeframe(tf: str) -> timedelta:
@@ -24,6 +25,7 @@ def _pack(outcome: str, pair: str, gross: float, max_fav: float, max_adv: float)
 
 def evaluate_outcome(direction: str, pair: str, entry: float, sl: float, tp: float, invalidation: float, candles: list[dict], expires_at: datetime, created_at: datetime) -> dict:
     now = datetime.now(timezone.utc)
+    expires_at = as_utc(expires_at)
     if direction == "HOLD":
         if now >= expires_at:
             return _pack("neutral", pair, 0.0, 0.0, 0.0)
