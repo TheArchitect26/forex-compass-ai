@@ -8,6 +8,7 @@ from app.db import get_db
 from app.models import Signal
 from app.models import SignalOutcome, ReliabilityHistory, StrategyState, ExplainabilityAudit
 from app.config import settings
+from app.config import has_real_market_provider, is_production_like, synthetic_buy_sell_blocked
 from app.engines.adaptive import record_outcome
 from app.engines.outcome_validation import validate_pending_outcomes
 from app.utils_time import utc_now
@@ -26,6 +27,36 @@ async def list_signals(db: AsyncSession = Depends(get_db), limit: int = 50):
     outcomes = (await db.execute(select(SignalOutcome))).scalars().all()
     by_signal = {o.signal_id: o for o in outcomes}
     return [_serialize(s, by_signal.get(s.id)) for s in rows]
+
+
+@router.get("/status")
+async def status():
+    real_provider_configured = has_real_market_provider()
+    production_like = is_production_like()
+    demo_only = not real_provider_configured
+    data_mode = "twelve_data" if real_provider_configured else "synthetic_demo"
+    live_data_ready = real_provider_configured
+    execution_ready = False
+    blocked_synthetic = synthetic_buy_sell_blocked() or (
+        demo_only and not settings.ALLOW_SYNTHETIC_SIGNALS
+    )
+
+    return {
+        "scanner_ready": live_data_ready or (demo_only and not production_like),
+        "live_data_ready": live_data_ready,
+        "execution_ready": execution_ready,
+        "demo_only": demo_only,
+        "data_mode": data_mode,
+        "market_data": {
+            "mode": data_mode,
+            "twelve_data_configured": real_provider_configured,
+            "demo_only": demo_only,
+        },
+        "synthetic_buy_sell_blocked": blocked_synthetic,
+        "auto_trade": False,
+        "no_execution": True,
+        "advisory_only": True,
+    }
 
 
 @router.post("/scan")
