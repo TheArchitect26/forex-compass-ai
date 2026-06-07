@@ -25,6 +25,10 @@ class MarketDataEngine:
         self._cache: dict[tuple, tuple[datetime, pd.DataFrame]] = {}
         self._last_source: dict[tuple[str, str, int], str] = {}
         self._last_warning: dict[tuple[str, str, int], str | None] = {}
+        self._symbol_results: dict[str, dict] = {}
+        self._provider_last_success: datetime | None = None
+        self._provider_last_error: datetime | None = None
+        self._provider_last_error_message: str | None = None
 
     async def close(self): await self._client.aclose()
 
@@ -33,6 +37,15 @@ class MarketDataEngine:
         if key in self._cache:
             ts, df = self._cache[key]
             if utc_now() - ts < timedelta(seconds=30):
+                source = self._last_source.get(key, "synthetic")
+                provider_cache = source == "twelve_data"
+                self.record_symbol_result(
+                    pair,
+                    status="cached" if provider_cache else "unknown",
+                    data_mode="cached" if provider_cache else "synthetic_demo",
+                    provider_name="cached_provider" if provider_cache else "synthetic",
+                    last_success=ts if provider_cache else None,
+                )
                 return df
         df = await self._fetch(pair, timeframe, limit)
         self._cache[key] = (utc_now(), df)
@@ -42,7 +55,78 @@ class MarketDataEngine:
         key = (pair, timeframe, limit)
         source = self._last_source.get(key, "synthetic")
         warning = self._last_warning.get(key)
-        return {"source": source, "warning": warning}
+        data_mode = "provider" if source == "twelve_data" else "synthetic_demo"
+        if key in self._cache:
+            ts, _ = self._cache[key]
+            if utc_now() - ts < timedelta(seconds=30):
+                data_mode = "cached"
+        return {"source": source, "warning": warning, "data_mode": data_mode}
+
+    @staticmethod
+    def _safe_error(message: str | None) -> str | None:
+        if not message:
+            return None
+        safe = str(message)
+        if settings.TWELVE_DATA_API_KEY:
+            safe = safe.replace(settings.TWELVE_DATA_API_KEY, "[redacted]")
+        return safe[:240]
+
+    def record_symbol_result(
+        self,
+        pair: str,
+        *,
+        status: str,
+        data_mode: str,
+        provider_name: str = "twelve_data",
+        last_success: datetime | None = None,
+        last_error: datetime | None = None,
+        last_error_message: str | None = None,
+    ) -> None:
+        existing = self._symbol_results.get(pair, {})
+        payload = {
+            "symbol": pair,
+            "status": status,
+            "data_mode": data_mode,
+            "provider_name": provider_name,
+            "last_success": (last_success or existing.get("last_success")),
+            "last_error": (last_error or existing.get("last_error")),
+            "last_error_message": self._safe_error(last_error_message) if last_error_message else existing.get("last_error_message"),
+        }
+        self._symbol_results[pair] = payload
+        if payload["last_success"]:
+            self._provider_last_success = payload["last_success"]
+        if payload["last_error"]:
+            self._provider_last_error = payload["last_error"]
+            self._provider_last_error_message = payload["last_error_message"]
+
+    def provider_diagnostics(self, symbols: list[str]) -> dict:
+        items = []
+        provider_configured = bool(settings.TWELVE_DATA_API_KEY.strip())
+        for symbol in symbols:
+            stored = self._symbol_results.get(symbol, {})
+            status = stored.get("status") or "unknown"
+            data_mode = stored.get("data_mode") or ("synthetic_demo" if not provider_configured else "unknown")
+            last_success = stored.get("last_success")
+            last_error = stored.get("last_error")
+            items.append({
+                "symbol": symbol,
+                "status": status,
+                "data_mode": data_mode,
+                "provider_name": stored.get("provider_name") or "twelve_data",
+                "last_success": last_success.isoformat() if last_success else None,
+                "last_error": last_error.isoformat() if last_error else None,
+                "last_error_message": stored.get("last_error_message"),
+            })
+        return {
+            "provider_name": "twelve_data",
+            "provider_configured": provider_configured,
+            "last_success": self._provider_last_success.isoformat() if self._provider_last_success else None,
+            "last_error": self._provider_last_error.isoformat() if self._provider_last_error else None,
+            "last_error_message": self._provider_last_error_message,
+            "symbols": items,
+            "auto_trade": False,
+            "no_execution": True,
+        }
 
     async def _fetch(self, pair: str, timeframe: Timeframe, limit: int) -> pd.DataFrame:
         if settings.TWELVE_DATA_API_KEY:
@@ -50,14 +134,26 @@ class MarketDataEngine:
                 df = await self._twelve(pair, timeframe, limit)
                 self._last_source[(pair, timeframe, limit)] = "twelve_data"
                 self._last_warning[(pair, timeframe, limit)] = None
+                now = utc_now()
+                self.record_symbol_result(pair, status="supported", data_mode="provider", provider_name="twelve_data", last_success=now)
                 return df
             except Exception as e:
                 logger.warning(f"Twelve Data failed: {e}; falling back to synthetic")
+                now = utc_now()
                 self._last_source[(pair, timeframe, limit)] = "synthetic"
                 self._last_warning[(pair, timeframe, limit)] = "Twelve Data request failed; using synthetic demo data."
+                self.record_symbol_result(
+                    pair,
+                    status="provider_failed",
+                    data_mode="synthetic_demo",
+                    provider_name="twelve_data",
+                    last_error=now,
+                    last_error_message=str(e),
+                )
                 return self._synthetic(pair, timeframe, limit)
         self._last_source[(pair, timeframe, limit)] = "synthetic"
         self._last_warning[(pair, timeframe, limit)] = "TWELVE_DATA_API_KEY missing; using synthetic demo data."
+        self.record_symbol_result(pair, status="unknown", data_mode="synthetic_demo", provider_name="synthetic")
         return self._synthetic(pair, timeframe, limit)
 
     async def _twelve(self, pair: str, timeframe: Timeframe, limit: int) -> pd.DataFrame:

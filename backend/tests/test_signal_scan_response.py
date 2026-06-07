@@ -1,11 +1,17 @@
 from app.config import settings
-from app.main import app
+
+
+class _FakeDb:
+    async def commit(self):
+        return None
 
 
 def test_mixed_scan_response_counts_and_provider_failures(monkeypatch):
+    import asyncio
     from app.api import signals as signals_api
-    from fastapi.testclient import TestClient
+    from app.engines.market_data import market_data
 
+    market_data._symbol_results.clear()
     monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_AUTH", True)
     monkeypatch.setattr(settings, "PAIRS", ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD"])
 
@@ -20,7 +26,7 @@ def test_mixed_scan_response_counts_and_provider_failures(monkeypatch):
 
     monkeypatch.setattr(signals_api, "run_signal_pipeline_for_pair", fake_pipeline)
 
-    payload = TestClient(app).post("/api/signals/scan").json()
+    payload = asyncio.run(signals_api.scan(db=_FakeDb(), _user="test"))
 
     assert payload["data_mode"] == "mixed"
     assert payload["real_count"] == 1
@@ -30,3 +36,11 @@ def test_mixed_scan_response_counts_and_provider_failures(monkeypatch):
     assert payload["provider_failed_symbols"] == ["AUD/USD"]
     assert payload["auto_trade"] is False
     assert payload["no_execution"] is True
+
+    diagnostics = market_data.provider_diagnostics(settings.PAIRS)
+    by_symbol = {item["symbol"]: item for item in diagnostics["symbols"]}
+    assert by_symbol["EUR/USD"]["status"] == "supported"
+    assert by_symbol["GBP/USD"]["status"] == "cached"
+    assert by_symbol["USD/JPY"]["data_mode"] == "synthetic_demo"
+    assert by_symbol["AUD/USD"]["status"] == "provider_failed"
+    assert by_symbol["AUD/USD"]["data_mode"] == "unavailable"

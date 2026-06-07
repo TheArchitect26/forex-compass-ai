@@ -18,6 +18,7 @@ from app.engines.reliability import classify_alignment, reliability_score
 from app.engines.pipeline import run_signal_pipeline_for_pair, config_snapshot
 from app.engines.strategy_profiles import profile_or_default
 from app.engines.session import classify_session
+from app.engines.market_data import market_data
 from app.security import current_user
 
 router = APIRouter()
@@ -81,12 +82,40 @@ async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_
             if sig.get("provider_failed"):
                 unavailable_count += 1
                 provider_failed_symbols.append(p)
+                market_data.record_symbol_result(
+                    p,
+                    status="provider_failed",
+                    data_mode="unavailable",
+                    provider_name=sig.get("provider_name") or "twelve_data",
+                    last_error=utc_now(),
+                    last_error_message=sig.get("warning") or "Provider data unavailable during scan.",
+                )
             elif sig.get("demo_only") or sig.get("data_mode") == "synthetic_demo" or sig.get("data_source") == "synthetic":
                 synthetic_demo_count += 1
+                market_data.record_symbol_result(
+                    p,
+                    status="unknown" if not has_real_market_provider() else "synthetic_demo",
+                    data_mode="synthetic_demo",
+                    provider_name=sig.get("provider_name") or "synthetic",
+                )
             elif sig.get("data_mode") == "cached" or sig.get("provider_name") == "cached_provider":
                 cached_count += 1
+                market_data.record_symbol_result(
+                    p,
+                    status="cached",
+                    data_mode="cached",
+                    provider_name=sig.get("provider_name") or "cached_provider",
+                    last_success=utc_now(),
+                )
             elif sig.get("data_source") == "real" or sig.get("provider_name") == "twelve_data":
                 real_count += 1
+                market_data.record_symbol_result(
+                    p,
+                    status="supported",
+                    data_mode=sig.get("data_mode") or "provider",
+                    provider_name=sig.get("provider_name") or "twelve_data",
+                    last_success=utc_now(),
+                )
     await db.commit()
     data_mode = _scan_data_mode(real_count, cached_count, synthetic_demo_count, unavailable_count)
     return {
@@ -178,6 +207,11 @@ async def performance(db: AsyncSession = Depends(get_db), include_synthetic: boo
 @router.get("/validation-stats")
 async def validation_stats(db: AsyncSession = Depends(get_db)):
     return await _validation_stats(db)
+
+
+@router.get("/provider-diagnostics")
+async def provider_diagnostics():
+    return market_data.provider_diagnostics(settings.PAIRS)
 
 
 def _review_execution_grade(context: SignalScanContext) -> str:
