@@ -1,13 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LineChart, Radar, Newspaper, NotebookPen, FlaskConical, Brain, Settings, BarChart3, Activity } from "lucide-react";
+import { LineChart, Radar, Newspaper, NotebookPen, FlaskConical, Brain, Settings, BarChart3, Activity, ClipboardCheck } from "lucide-react";
 import clsx from "clsx";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: LineChart },
   { href: "/scanner", label: "Market Scanner", icon: Radar },
   { href: "/signals", label: "Signals", icon: Activity },
+  { href: "/signals/review", label: "Signal Review", icon: ClipboardCheck },
   { href: "/analysis", label: "AI Analysis", icon: Brain },
   { href: "/calendar", label: "Calendar & News", icon: Newspaper },
   { href: "/journal", label: "Trade Journal", icon: NotebookPen },

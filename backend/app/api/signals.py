@@ -180,6 +180,124 @@ async def validation_stats(db: AsyncSession = Depends(get_db)):
     return await _validation_stats(db)
 
 
+def _review_execution_grade(context: SignalScanContext) -> str:
+    if context.direction == "HOLD":
+        return "review_only"
+    return "validation_candidate"
+
+
+def _review_validation_status(context: SignalScanContext, outcome: SignalOutcome | None) -> str:
+    if context.direction == "HOLD":
+        return "skipped_hold"
+    if context.demo_only:
+        return "skipped_demo"
+    if not outcome or outcome.outcome == "pending":
+        return "pending"
+    if outcome.outcome in {"win", "loss"}:
+        return "validated"
+    return outcome.outcome
+
+
+def _review_outcome(context: SignalScanContext, outcome: SignalOutcome | None) -> str:
+    if outcome:
+        return outcome.outcome
+    if context.direction == "HOLD":
+        return "neutral"
+    return "pending"
+
+
+def _review_outcome_notes(context: SignalScanContext, validation_status: str) -> str:
+    if context.direction == "HOLD":
+        return "HOLD signals are review-only and are not validated as win/loss outcomes."
+    if context.demo_only:
+        return "Synthetic demo records are separated from provider validation and are not execution records."
+    if context.data_mode == "unavailable":
+        return "Provider data was unavailable, so this record is review-only until provider-backed data exists."
+    if validation_status == "pending":
+        return "BUY/SELL provider-backed records are validation candidates only; no execution behavior is exposed."
+    return "Validation outcome is advisory-only and does not represent broker execution."
+
+
+def _serialize_review_context(context: SignalScanContext, outcome: SignalOutcome | None) -> dict:
+    validation_status = _review_validation_status(context, outcome)
+    return {
+        "signal_id": context.signal_id,
+        "symbol": context.symbol,
+        "interval": context.interval,
+        "direction": context.direction,
+        "confidence": context.confidence,
+        "entry_price": context.entry_price,
+        "timestamp": context.signal_timestamp.isoformat(),
+        "data_mode": context.data_mode,
+        "provider_name": context.provider_name,
+        "demo_only": context.demo_only,
+        "execution_grade": _review_execution_grade(context),
+        "validation_status": validation_status,
+        "outcome": _review_outcome(context, outcome),
+        "outcome_notes": _review_outcome_notes(context, validation_status),
+        "created_at": context.created_at.isoformat(),
+        "auto_trade": False,
+        "no_execution": True,
+        "advisory_only": True,
+    }
+
+
+@router.get("/review")
+async def review_signals(
+    db: AsyncSession = Depends(get_db),
+    symbol: str = "",
+    interval: str = "",
+    direction: str = "",
+    validation_status: str = "",
+    demo_only: bool | None = Query(default=None),
+    data_mode: str = "",
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+):
+    rows = (
+        await db.execute(
+            select(SignalScanContext, SignalOutcome)
+            .outerjoin(SignalOutcome, SignalOutcome.signal_id == SignalScanContext.signal_id)
+            .order_by(desc(SignalScanContext.created_at))
+        )
+    ).all()
+    items = [_serialize_review_context(context, outcome) for context, outcome in rows]
+
+    if symbol:
+        items = [item for item in items if item["symbol"] == symbol]
+    if interval:
+        items = [item for item in items if item["interval"] == interval]
+    if direction:
+        items = [item for item in items if item["direction"] == direction]
+    if validation_status:
+        items = [item for item in items if item["validation_status"] == validation_status]
+    if demo_only is not None:
+        items = [item for item in items if item["demo_only"] is demo_only]
+    if data_mode:
+        items = [item for item in items if item["data_mode"] == data_mode]
+
+    summary = {
+        "total": len(items),
+        "provider_backed": sum(1 for item in items if item["data_mode"] in {"provider", "live", "cached"} and not item["demo_only"]),
+        "demo_only": sum(1 for item in items if item["demo_only"]),
+        "unavailable": sum(1 for item in items if item["data_mode"] == "unavailable"),
+        "pending": sum(1 for item in items if item["validation_status"] == "pending"),
+        "skipped_hold": sum(1 for item in items if item["validation_status"] == "skipped_hold"),
+        "wins": sum(1 for item in items if item["outcome"] == "win"),
+        "losses": sum(1 for item in items if item["outcome"] == "loss"),
+    }
+
+    return {
+        "items": items[offset : offset + limit],
+        "summary": summary,
+        "limit": limit,
+        "offset": offset,
+        "auto_trade": False,
+        "no_execution": True,
+        "advisory_only": True,
+    }
+
+
 
 @router.post("/replay/run")
 async def replay_run(body: dict, db: AsyncSession = Depends(get_db)):
