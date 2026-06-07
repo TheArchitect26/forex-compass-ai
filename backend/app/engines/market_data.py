@@ -17,6 +17,20 @@ from app.config import settings
 
 Timeframe = Literal["1min", "5min", "15min", "30min", "1h", "4h", "1day"]
 _TF_MIN = {"1min":1,"5min":5,"15min":15,"30min":30,"1h":60,"4h":240,"1day":1440}
+RECENT_FAILURE_TTL = timedelta(hours=6)
+
+TWELVE_DATA_FOREX_MAJORS = [
+    "EUR/USD",
+    "GBP/USD",
+    "USD/JPY",
+    "AUD/USD",
+    "USD/CAD",
+    "USD/CHF",
+    "NZD/USD",
+]
+TWELVE_DATA_COMMODITIES = ["XAU/USD"]
+TWELVE_DATA_EXPERIMENTAL = ["EUR/GBP", "EUR/JPY", "GBP/JPY"]
+TWELVE_DATA_UNSUPPORTED = ["BTC/USD", "ETH/USD"]
 
 
 class MarketDataEngine:
@@ -99,13 +113,67 @@ class MarketDataEngine:
             self._provider_last_error = payload["last_error"]
             self._provider_last_error_message = payload["last_error_message"]
 
+    def symbol_presets(self) -> dict:
+        return {
+            "forex_majors": TWELVE_DATA_FOREX_MAJORS,
+            "commodities": TWELVE_DATA_COMMODITIES,
+            "experimental": TWELVE_DATA_EXPERIMENTAL,
+            "unsupported": TWELVE_DATA_UNSUPPORTED,
+        }
+
+    def is_recently_failed(self, symbol: str) -> bool:
+        stored = self._symbol_results.get(symbol, {})
+        last_error = stored.get("last_error")
+        if stored.get("status") not in {"provider_failed", "failed", "unavailable"}:
+            return False
+        if not last_error:
+            return True
+        return utc_now() - last_error < RECENT_FAILURE_TTL
+
+    def unavailable_symbols(self, symbols: list[str]) -> list[str]:
+        unsupported = set(TWELVE_DATA_UNSUPPORTED)
+        return [symbol for symbol in symbols if symbol in unsupported or self.is_recently_failed(symbol)]
+
+    def recommended_symbols(self, symbols: list[str]) -> list[str]:
+        baseline = [s for s in [*TWELVE_DATA_FOREX_MAJORS, *TWELVE_DATA_COMMODITIES] if s in symbols]
+        unavailable = set(self.unavailable_symbols(symbols))
+        return [symbol for symbol in baseline if symbol not in unavailable]
+
+    def scan_symbols(self, requested: list[str] | None, retry_symbols: list[str] | None = None) -> tuple[list[str], list[str]]:
+        symbols = requested or settings.PAIRS
+        retry = set(retry_symbols or [])
+        unsupported = set(TWELVE_DATA_UNSUPPORTED)
+        blocked = [
+            symbol
+            for symbol in symbols
+            if symbol in unsupported or (self.is_recently_failed(symbol) and symbol not in retry)
+        ]
+        return [symbol for symbol in symbols if symbol not in blocked], blocked
+
+    def clear_symbol_failures(self, symbols: list[str]) -> None:
+        for symbol in symbols:
+            stored = self._symbol_results.get(symbol)
+            if not stored:
+                continue
+            stored["status"] = "unknown"
+            stored["last_error"] = None
+            stored["last_error_message"] = None
+            if stored.get("data_mode") == "unavailable":
+                stored["data_mode"] = "unknown"
+
     def provider_diagnostics(self, symbols: list[str]) -> dict:
         items = []
         provider_configured = bool(settings.TWELVE_DATA_API_KEY.strip())
+        unavailable = set(self.unavailable_symbols(symbols))
         for symbol in symbols:
             stored = self._symbol_results.get(symbol, {})
             status = stored.get("status") or "unknown"
             data_mode = stored.get("data_mode") or ("synthetic_demo" if not provider_configured else "unknown")
+            if symbol in TWELVE_DATA_UNSUPPORTED:
+                status = "unsupported"
+                data_mode = "unavailable"
+            elif symbol in unavailable:
+                data_mode = "unavailable"
             last_success = stored.get("last_success")
             last_error = stored.get("last_error")
             items.append({
@@ -124,6 +192,9 @@ class MarketDataEngine:
             "last_error": self._provider_last_error.isoformat() if self._provider_last_error else None,
             "last_error_message": self._provider_last_error_message,
             "symbols": items,
+            "symbol_presets": self.symbol_presets(),
+            "recommended_symbols": self.recommended_symbols(symbols),
+            "unavailable_symbols": sorted(unavailable | set(TWELVE_DATA_UNSUPPORTED)),
             "auto_trade": False,
             "no_execution": True,
         }

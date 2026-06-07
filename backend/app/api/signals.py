@@ -24,6 +24,15 @@ from app.security import current_user
 router = APIRouter()
 
 
+class ScanRequest(BaseModel):
+    symbols: list[str] | None = None
+    retry_symbols: list[str] = []
+
+
+class RetrySymbols(BaseModel):
+    symbols: list[str]
+
+
 @router.get("")
 async def list_signals(db: AsyncSession = Depends(get_db), limit: int = 50):
     rows = (await db.execute(select(Signal).order_by(desc(Signal.created_at)).limit(limit))).scalars().all()
@@ -67,7 +76,7 @@ async def status(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/scan")
-async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
+async def scan(body: ScanRequest | None = None, db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
     """Run unified pipeline over all pairs."""
     found = []
     real_count = 0
@@ -75,7 +84,24 @@ async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_
     synthetic_demo_count = 0
     unavailable_count = 0
     provider_failed_symbols = []
-    for p in settings.PAIRS:
+    retry_symbols = body.retry_symbols if body else []
+    if retry_symbols:
+        market_data.clear_symbol_failures(retry_symbols)
+    scan_symbols, skipped_unavailable_symbols = market_data.scan_symbols(
+        body.symbols if body else None,
+        retry_symbols,
+    )
+    unavailable_count += len(skipped_unavailable_symbols)
+    provider_failed_symbols.extend(skipped_unavailable_symbols)
+    for p in skipped_unavailable_symbols:
+        market_data.record_symbol_result(
+            p,
+            status="unsupported" if p in market_data.symbol_presets()["unsupported"] else "provider_failed",
+            data_mode="unavailable",
+            provider_name="twelve_data",
+            last_error_message="Symbol skipped because it is unsupported or recently failed. Use manual retry for recently failed symbols.",
+        )
+    for p in scan_symbols:
         sig = await run_signal_pipeline_for_pair(db, p, source="api_scan", report_unavailable=True)
         if sig:
             found.append(sig)
@@ -126,6 +152,9 @@ async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_
         "synthetic_demo_count": synthetic_demo_count,
         "unavailable_count": unavailable_count,
         "provider_failed_symbols": provider_failed_symbols,
+        "skipped_unavailable_symbols": skipped_unavailable_symbols,
+        "requested_symbols": body.symbols if body and body.symbols else settings.PAIRS,
+        "scanned_symbols": scan_symbols,
         "data_mode": data_mode,
         "auto_trade": False,
         "no_execution": True,
@@ -135,7 +164,7 @@ async def scan(db: AsyncSession = Depends(get_db), _user: str = Depends(current_
 
 @router.get("/scan")
 async def scan_get(db: AsyncSession = Depends(get_db), _user: str = Depends(current_user)):
-    return await scan(db, _user)
+    return await scan(None, db, _user)
 
 
 def _scan_data_mode(real_count: int, cached_count: int, synthetic_demo_count: int, unavailable_count: int) -> str:
@@ -212,6 +241,17 @@ async def validation_stats(db: AsyncSession = Depends(get_db)):
 @router.get("/provider-diagnostics")
 async def provider_diagnostics():
     return market_data.provider_diagnostics(settings.PAIRS)
+
+
+@router.post("/provider-diagnostics/retry")
+async def retry_provider_symbols(body: RetrySymbols, _user: str = Depends(current_user)):
+    market_data.clear_symbol_failures(body.symbols)
+    return {
+        "retried_symbols": body.symbols,
+        "diagnostics": market_data.provider_diagnostics(settings.PAIRS),
+        "auto_trade": False,
+        "no_execution": True,
+    }
 
 
 def _review_execution_grade(context: SignalScanContext) -> str:
