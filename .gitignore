@@ -35,3 +35,8 @@ frontend/.vercel/
 .env
 .env.*
 !.env.example
+
+# Local runtime files
+local_dev.db
+backend/celerybeat-schedule
+celerybeat-schedule

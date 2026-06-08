@@ -25,6 +25,7 @@ export default function AnalysisPage() {
   useEffect(() => { run(pair); }, [pair]);
 
   const sig = data?.signal;
+  const confidenceBreakdown = sig?.reasoning?.confidence_breakdown?.breakdown ?? {};
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -73,16 +74,16 @@ export default function AnalysisPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {(["htf","mtf","ltf"] as const).map(tf => {
-              const t = sig.reasoning.technical[tf];
+              const t = sig?.reasoning?.technical?.[tf];
               const labels = { htf: "Higher TF (4H)", mtf: "Intermediate (1H)", ltf: "Entry TF (15M)" };
               return (
                 <Card key={tf}>
                   <CardTitle>{labels[tf]}</CardTitle>
                   <div className="text-sm space-y-1">
-                    <Row k="Trend" v={t.trend} />
-                    <Row k="Momentum" v={t.momentum} />
-                    <Row k="RSI" v={`${t.rsi.toFixed(1)} (${t.rsi_state})`} />
-                    <Row k="ADX" v={t.adx.toFixed(1)} />
+                    <Row k="Trend" v={t?.trend ?? "Unavailable"} />
+                    <Row k="Momentum" v={t?.momentum ?? "Unavailable"} />
+                    <Row k="RSI" v={typeof t?.rsi === "number" ? `${t.rsi.toFixed(1)} (${t.rsi_state})` : "Unavailable"} />
+                    <Row k="ADX" v={typeof t?.adx === "number" ? t.adx.toFixed(1) : "Unavailable"} />
                   </div>
                 </Card>
               );
@@ -91,14 +92,18 @@ export default function AnalysisPage() {
 
           <Card>
             <CardTitle>Confidence breakdown</CardTitle>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
-              {Object.entries(sig.reasoning.confidence_breakdown.breakdown).map(([k, v]) => (
-                <div key={k} className="bg-panel2 px-2 py-2 rounded">
-                  <div className="text-muted">{k}</div>
-                  <div className="text-lg">{v as number}</div>
-                </div>
-              ))}
-            </div>
+            {Object.keys(confidenceBreakdown).length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+                {Object.entries(confidenceBreakdown).map(([k, v]) => (
+                  <div key={k} className="bg-panel2 px-2 py-2 rounded">
+                    <div className="text-muted">{k}</div>
+                    <div className="text-lg">{v as number}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted">Confidence breakdown unavailable for this signal.</p>
+            )}
           </Card>
         </>
       )}
