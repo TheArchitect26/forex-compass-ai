@@ -14,6 +14,7 @@ from app.utils_time import as_utc, utc_now
 FINAL_OUTCOMES = {"win", "loss", "neutral", "expired", "invalidated"}
 VALIDATION_TIMEFRAMES = {"1min", "5min", "15min", "30min", "1h", "4h", "1day"}
 TF_MINUTES = {"1min": 1, "5min": 5, "15min": 15, "30min": 30, "1h": 60, "4h": 240, "1day": 1440}
+PROVIDER_VALIDATION_MODES = {"provider", "live", "cached"}
 
 
 def classify_threshold_outcome(
@@ -73,6 +74,8 @@ async def validate_pending_outcomes(db) -> dict:
         "pending": 0,
         "skipped_demo": 0,
         "skipped_hold": 0,
+        "skipped_unavailable": 0,
+        "skipped_non_execution": 0,
         "missing_data": 0,
         "wins": 0,
         "losses": 0,
@@ -99,6 +102,12 @@ async def validate_pending_outcomes(db) -> dict:
                 outcome_row.checked_at = utc_now()
                 counts["skipped_demo"] += 1
                 continue
+            data_mode = context.data_mode if context else ("provider" if signal.data_source == "real" else "synthetic_demo")
+            if data_mode == "unavailable":
+                outcome_row.outcome = "pending"
+                outcome_row.checked_at = utc_now()
+                counts["skipped_unavailable"] += 1
+                continue
             if signal.direction == "HOLD":
                 outcome_row.outcome = "neutral"
                 outcome_row.checked_at = utc_now()
@@ -107,6 +116,11 @@ async def validate_pending_outcomes(db) -> dict:
             if signal.direction not in {"BUY", "SELL"}:
                 outcome_row.checked_at = utc_now()
                 counts["skipped_hold"] += 1
+                continue
+            if data_mode not in PROVIDER_VALIDATION_MODES:
+                outcome_row.outcome = "pending"
+                outcome_row.checked_at = utc_now()
+                counts["skipped_non_execution"] += 1
                 continue
 
             counts["provider_candidates"] += 1
@@ -152,14 +166,14 @@ async def validate_pending_outcomes(db) -> dict:
         run.completed_at = utc_now()
         await db.commit()
         counts["pending"] = counts["provider_pending"]
-        return {**counts, "updated": counts["validated"], "run_id": run.id, "auto_trade": False, "no_execution": True}
+        return {**counts, "updated": counts["validated"], "run_id": run.id, "auto_trade": False, "no_execution": True, "advisory_only": True}
     except Exception as exc:
         run.status = "failed"
         run.error_message = str(exc)
         run.completed_at = utc_now()
         await db.commit()
         counts["pending"] = counts["provider_pending"]
-        return {**counts, "updated": counts["validated"], "error": str(exc), "run_id": run.id, "auto_trade": False, "no_execution": True}
+        return {**counts, "updated": counts["validated"], "error": str(exc), "run_id": run.id, "auto_trade": False, "no_execution": True, "advisory_only": True}
 
 
 async def _ensure_outcome_row(db, signal: Signal) -> SignalOutcome:

@@ -7,7 +7,7 @@ from app.models import Signal, SignalOutcome, ReliabilityHistory, StrategyState,
 from app.config import settings
 from app.engines.notifications import notify_signal
 from app.engines import ml
-from app.engines.outcome_validation import validate_pending_outcomes
+from app.engines.scheduled_validation import run_scheduled_validation
 from app.engines.reliability import reliability_score
 from app.engines.strategy_profiles import profile_or_default
 from app.engines.pipeline import run_signal_pipeline_for_pair
@@ -48,7 +48,7 @@ def retrain_ml():
 def validate_outcomes():
     async def _go():
         async with SessionLocal() as db:
-            return await validate_pending_outcomes(db)
+            return await run_scheduled_validation(db)
     return asyncio.run(_go())
 
 

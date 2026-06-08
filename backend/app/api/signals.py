@@ -19,6 +19,7 @@ from app.engines.pipeline import run_signal_pipeline_for_pair, config_snapshot
 from app.engines.strategy_profiles import profile_or_default
 from app.engines.session import classify_session
 from app.engines.market_data import market_data
+from app.engines.scheduled_validation import latest_validation_run
 from app.security import current_user
 
 router = APIRouter()
@@ -54,6 +55,7 @@ async def status(db: AsyncSession = Depends(get_db)):
     )
 
     stats = await _validation_stats(db)
+    latest_run = await latest_validation_run(db)
     return {
         "scanner_ready": live_data_ready or (demo_only and not production_like),
         "live_data_ready": live_data_ready,
@@ -71,6 +73,12 @@ async def status(db: AsyncSession = Depends(get_db)):
         "advisory_only": True,
         "pending_validation_count": stats["provider_backed"]["pending"],
         "recent_accuracy": stats["provider_backed"]["win_rate"],
+        "last_validation_run": latest_run,
+        "last_validation_run_at": latest_run["completed_at"] if latest_run else None,
+        "last_validation_counts": {
+            "signals_checked": latest_run["signals_checked"] if latest_run else 0,
+            "outcomes_updated": latest_run["outcomes_updated"] if latest_run else 0,
+        },
         "validation": stats,
     }
 

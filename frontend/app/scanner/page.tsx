@@ -9,6 +9,8 @@ type SignalStatus = {
   pending_validation_count?: number;
   recent_accuracy?: number;
   data_mode?: string;
+  last_validation_run_at?: string | null;
+  last_validation_counts?: { signals_checked: number; outcomes_updated: number };
   validation?: {
     provider_backed?: { validated: number; pending: number; win_rate: number; loss_rate: number };
     synthetic_demo?: { total: number; pending: number; win_rate: number };
@@ -108,11 +110,14 @@ export default function ScannerPage() {
       {warning && <div className="text-xs text-yellow-400 bg-yellow-950/30 border border-yellow-700 rounded p-2">{warning}</div>}
       {error && <div className="text-xs text-bear bg-bear/10 border border-bear/40 rounded p-2">{error}</div>}
       {status && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <Card>
             <CardTitle>Validation queue</CardTitle>
             <div className="text-lg font-mono">{status.pending_validation_count ?? 0}</div>
             <div className="text-xs text-muted">provider-backed pending outcomes</div>
+            <div className="mt-1 text-xs text-muted">
+              Last run: {status.last_validation_run_at ? new Date(status.last_validation_run_at).toLocaleString() : "not run"}
+            </div>
           </Card>
           <Card>
             <CardTitle>Provider accuracy</CardTitle>
@@ -123,6 +128,11 @@ export default function ScannerPage() {
             <CardTitle>Demo results</CardTitle>
             <div className="text-lg font-mono">{status.validation?.synthetic_demo?.total ?? 0}</div>
             <div className="text-xs text-muted">synthetic/demo records are separated from provider stats</div>
+          </Card>
+          <Card>
+            <CardTitle>Last validation</CardTitle>
+            <div className="text-lg font-mono">{status.last_validation_counts?.outcomes_updated ?? 0}</div>
+            <div className="text-xs text-muted">updates from {status.last_validation_counts?.signals_checked ?? 0} checked records</div>
           </Card>
         </div>
       )}
