@@ -20,6 +20,7 @@ from app.engines.strategy_profiles import profile_or_default
 from app.engines.session import classify_session
 from app.engines.market_data import market_data
 from app.engines.scheduled_validation import latest_validation_run
+from app.engines.auto_training import training_status
 from app.security import current_user
 
 router = APIRouter()
@@ -244,6 +245,11 @@ async def performance(db: AsyncSession = Depends(get_db), include_synthetic: boo
 @router.get("/validation-stats")
 async def validation_stats(db: AsyncSession = Depends(get_db)):
     return await _validation_stats(db)
+
+
+@router.get("/training-status")
+async def get_training_status(db: AsyncSession = Depends(get_db)):
+    return await training_status(db)
 
 
 @router.get("/provider-diagnostics")
