@@ -9,6 +9,7 @@ const nav = [
   { href: "/scanner", label: "Market Scanner", icon: Radar },
   { href: "/signals", label: "Signals", icon: Activity },
   { href: "/signals/review", label: "Signal Review", icon: ClipboardCheck },
+  { href: "/training", label: "7-Day Training", icon: BarChart3 },
   { href: "/provider-diagnostics", label: "Provider Diagnostics", icon: Stethoscope },
   { href: "/analysis", label: "AI Analysis", icon: Brain },
   { href: "/calendar", label: "Calendar & News", icon: Newspaper },

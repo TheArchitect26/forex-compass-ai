@@ -11,6 +11,7 @@ celery_app = Celery(
 )
 celery_app.conf.timezone = "UTC"
 celery_app.conf.beat_schedule = {
+    "auto-training-due-check-every-minute": {"task": "app.tasks.jobs.auto_train_signals", "schedule": 60.0},
     "scan-market-every-5min": {"task": "app.tasks.jobs.scan_market", "schedule": 300.0},
     "validate-outcomes-every-10min": {"task": "app.tasks.jobs.validate_outcomes", "schedule": 600.0},
     "reliability-snapshot-every-30min": {"task": "app.tasks.jobs.snapshot_reliability", "schedule": 1800.0},

@@ -77,6 +77,7 @@ async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan", 
     )
     db.add(row)
     await db.flush()
+    s["signal_id"] = row.id
 
     snapshot = await _persist_signal_candle_snapshot(db, s["pair"], s["timeframe"], provider_name, demo_only)
     db.add(SignalScanContext(

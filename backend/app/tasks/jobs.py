@@ -8,6 +8,7 @@ from app.config import settings
 from app.engines.notifications import notify_signal
 from app.engines import ml
 from app.engines.scheduled_validation import run_scheduled_validation
+from app.engines.auto_training import run_auto_training
 from app.engines.reliability import reliability_score
 from app.engines.strategy_profiles import profile_or_default
 from app.engines.pipeline import run_signal_pipeline_for_pair
@@ -49,6 +50,14 @@ def validate_outcomes():
     async def _go():
         async with SessionLocal() as db:
             return await run_scheduled_validation(db)
+    return asyncio.run(_go())
+
+
+@celery_app.task
+def auto_train_signals():
+    async def _go():
+        async with SessionLocal() as db:
+            return await run_auto_training(db)
     return asyncio.run(_go())
 
 

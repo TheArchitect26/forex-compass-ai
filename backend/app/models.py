@@ -133,6 +133,35 @@ class ValidationRun(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
+class TrainingRun(Base):
+    __tablename__ = "training_runs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_scan_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="running", index=True)
+    interval_minutes: Mapped[int] = mapped_column(Integer, default=30)
+    symbols: Mapped[list] = mapped_column(JSON, default=list)
+    total_scans: Mapped[int] = mapped_column(Integer, default=0)
+    provider_backed_signals: Mapped[int] = mapped_column(Integer, default=0)
+    synthetic_skipped: Mapped[int] = mapped_column(Integer, default=0)
+    unavailable_skipped: Mapped[int] = mapped_column(Integer, default=0)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class TrainingSignalSample(Base):
+    __tablename__ = "training_signal_samples"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    training_run_id: Mapped[int] = mapped_column(ForeignKey("training_runs.id"), index=True)
+    signal_id: Mapped[int] = mapped_column(ForeignKey("signals.id"), unique=True, index=True)
+    symbol: Mapped[str] = mapped_column(String(16), index=True)
+    direction: Mapped[str] = mapped_column(String(8))
+    data_mode: Mapped[str] = mapped_column(String(32), index=True)
+    demo_only: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    execution_grade: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+
+
 class ReliabilityHistory(Base):
     __tablename__ = "reliability_history"
     id: Mapped[int] = mapped_column(primary_key=True)
