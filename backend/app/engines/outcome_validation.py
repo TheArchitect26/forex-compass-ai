@@ -63,7 +63,7 @@ def classify_threshold_outcome(
 
 
 async def validate_pending_outcomes(db) -> dict:
-    run = ValidationRun(status="running", started_at=utc_now())
+    run = ValidationRun(status="running", started_at=utc_now().replace(tzinfo=None))
     db.add(run)
     await db.flush()
     counts = {
@@ -99,27 +99,27 @@ async def validate_pending_outcomes(db) -> dict:
             demo_only = (context.demo_only if context else signal.data_source == "synthetic")
             if demo_only:
                 outcome_row.outcome = "pending"
-                outcome_row.checked_at = utc_now()
+                outcome_row.checked_at = utc_now().replace(tzinfo=None)
                 counts["skipped_demo"] += 1
                 continue
             data_mode = context.data_mode if context else ("provider" if signal.data_source == "real" else "synthetic_demo")
             if data_mode == "unavailable":
                 outcome_row.outcome = "pending"
-                outcome_row.checked_at = utc_now()
+                outcome_row.checked_at = utc_now().replace(tzinfo=None)
                 counts["skipped_unavailable"] += 1
                 continue
             if signal.direction == "HOLD":
                 outcome_row.outcome = "neutral"
-                outcome_row.checked_at = utc_now()
+                outcome_row.checked_at = utc_now().replace(tzinfo=None)
                 counts["skipped_hold"] += 1
                 continue
             if signal.direction not in {"BUY", "SELL"}:
-                outcome_row.checked_at = utc_now()
+                outcome_row.checked_at = utc_now().replace(tzinfo=None)
                 counts["skipped_hold"] += 1
                 continue
             if data_mode not in PROVIDER_VALIDATION_MODES:
                 outcome_row.outcome = "pending"
-                outcome_row.checked_at = utc_now()
+                outcome_row.checked_at = utc_now().replace(tzinfo=None)
                 counts["skipped_non_execution"] += 1
                 continue
 
@@ -127,7 +127,7 @@ async def validate_pending_outcomes(db) -> dict:
 
             future_candles = await _future_candles(db, signal, context)
             if not future_candles:
-                outcome_row.checked_at = utc_now()
+                outcome_row.checked_at = utc_now().replace(tzinfo=None)
                 counts["missing_data"] += 1
                 counts["provider_pending"] += 1
                 continue
@@ -141,7 +141,7 @@ async def validate_pending_outcomes(db) -> dict:
             outcome_row.outcome = result["outcome"]
             outcome_row.max_favorable_move = result["max_favorable_move"]
             outcome_row.max_adverse_move = result["max_adverse_move"]
-            outcome_row.checked_at = utc_now()
+            outcome_row.checked_at = utc_now().replace(tzinfo=None)
             if result["outcome"] == "win":
                 outcome_row.result_pips = settings.OUTCOME_TAKE_PROFIT_PIPS
                 outcome_row.gross_result_pips = settings.OUTCOME_TAKE_PROFIT_PIPS
@@ -163,14 +163,14 @@ async def validate_pending_outcomes(db) -> dict:
         run.status = "completed"
         run.signals_checked = counts["checked"]
         run.outcomes_updated = counts["validated"]
-        run.completed_at = utc_now()
+        run.completed_at = utc_now().replace(tzinfo=None)
         await db.commit()
         counts["pending"] = counts["provider_pending"]
         return {**counts, "updated": counts["validated"], "run_id": run.id, "auto_trade": False, "no_execution": True, "advisory_only": True}
     except Exception as exc:
         run.status = "failed"
         run.error_message = str(exc)
-        run.completed_at = utc_now()
+        run.completed_at = utc_now().replace(tzinfo=None)
         await db.commit()
         counts["pending"] = counts["provider_pending"]
         return {**counts, "updated": counts["validated"], "error": str(exc), "run_id": run.id, "auto_trade": False, "no_execution": True, "advisory_only": True}

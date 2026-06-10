@@ -25,7 +25,8 @@ async def _latest_run(db) -> TrainingRun | None:
 
 def _configured_symbols() -> list[str]:
     configured = settings.AUTO_TRAINING_SYMBOLS or settings.PAIRS
-    return market_data.recommended_symbols(configured)
+    recommended = market_data.recommended_symbols(configured)
+    return recommended or configured
 
 
 def _metadata(run: TrainingRun | None) -> dict | None:
@@ -54,12 +55,13 @@ async def run_auto_training(db, *, force: bool = False) -> dict:
         return {**await training_status(db), "skipped": True, "reason": "disabled"}
 
     now = utc_now()
+    db_now = now.replace(tzinfo=None)
     if run and run.status == "completed":
         return {**await training_status(db), "skipped": True, "reason": "training_complete"}
 
     if not run:
         run = TrainingRun(
-            started_at=now,
+            started_at=db_now,
             status="running",
             interval_minutes=max(1, settings.AUTO_TRAINING_INTERVAL_MINUTES),
             symbols=_configured_symbols(),
@@ -70,7 +72,7 @@ async def run_auto_training(db, *, force: bool = False) -> dict:
     if now - as_utc(run.started_at) >= TRAINING_DURATION:
         await validate_pending_outcomes(db)
         run.status = "completed"
-        run.completed_at = now
+        run.completed_at = db_now
         await db.commit()
         return {**await training_status(db), "skipped": True, "reason": "training_complete"}
 
@@ -114,7 +116,7 @@ async def run_auto_training(db, *, force: bool = False) -> dict:
                 ))
 
         run.total_scans += 1
-        run.last_scan_at = now
+        run.last_scan_at = db_now
         await db.commit()
         validation = await validate_pending_outcomes(db)
         return {
@@ -132,6 +134,7 @@ async def run_auto_training(db, *, force: bool = False) -> dict:
 async def training_status(db) -> dict:
     run = await _latest_run(db)
     now = utc_now()
+    db_now = now.replace(tzinfo=None)
     rows = []
     if run:
         rows = (

@@ -53,7 +53,7 @@ async def run_signal_pipeline_for_pair(db, pair: str, source: str = "api_scan", 
     demo_only = s["data_source"] == "synthetic" or provider_name == "synthetic"
     data_mode = "synthetic_demo" if demo_only else "provider"
 
-    cooldown_since = utc_now() - timedelta(minutes=profile["cooldown_minutes"])
+    cooldown_since = (utc_now() - timedelta(minutes=profile["cooldown_minutes"])).replace(tzinfo=None)
     existing = (await db.execute(select(Signal).where(Signal.pair == s["pair"], Signal.timeframe == s["timeframe"], Signal.created_at >= cooldown_since).order_by(desc(Signal.created_at)))).scalars().first()
     if existing and is_duplicate_recent(existing.created_at, profile["cooldown_minutes"]):
         return None

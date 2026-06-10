@@ -10,7 +10,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class Signal(Base):
@@ -35,7 +35,7 @@ class Signal(Base):
     explanation: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(16), default="open")  # open|win|loss|expired
     pnl_pips: Mapped[float | None] = mapped_column(Float, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -52,7 +52,7 @@ class JournalEntry(Base):
     result: Mapped[str | None] = mapped_column(String(8), nullable=True)  # win/loss/be
     notes: Mapped[str] = mapped_column(Text, default="")
     tags: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class BacktestRun(Base):
@@ -66,7 +66,7 @@ class BacktestRun(Base):
     params: Mapped[dict] = mapped_column(JSON)
     metrics: Mapped[dict] = mapped_column(JSON)  # sharpe, winrate, dd, expectancy...
     equity_curve: Mapped[list] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class LearningRecord(Base):
@@ -80,7 +80,7 @@ class LearningRecord(Base):
     losses: Mapped[int] = mapped_column(Integer, default=0)
     avg_rr: Mapped[float] = mapped_column(Float, default=0.0)
     weight: Mapped[float] = mapped_column(Float, default=1.0)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class SignalOutcome(Base):
@@ -102,7 +102,7 @@ class SignalOutcome(Base):
     estimated_cost_pips: Mapped[float] = mapped_column(Float, default=0.0)
     net_result_pips: Mapped[float] = mapped_column(Float, default=0.0)
     checked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class SignalScanContext(Base):
@@ -119,13 +119,13 @@ class SignalScanContext(Base):
     provider_name: Mapped[str] = mapped_column(String(32), default="synthetic")
     demo_only: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     candle_snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ValidationRun(Base):
     __tablename__ = "validation_runs"
     id: Mapped[int] = mapped_column(primary_key=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="running", index=True)  # running|completed|failed
     signals_checked: Mapped[int] = mapped_column(Integer, default=0)
@@ -136,7 +136,7 @@ class ValidationRun(Base):
 class TrainingRun(Base):
     __tablename__ = "training_runs"
     id: Mapped[int] = mapped_column(primary_key=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_scan_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="running", index=True)
@@ -159,7 +159,7 @@ class TrainingSignalSample(Base):
     data_mode: Mapped[str] = mapped_column(String(32), index=True)
     demo_only: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     execution_grade: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ReliabilityHistory(Base):
@@ -171,7 +171,7 @@ class ReliabilityHistory(Base):
     win_rate: Mapped[float] = mapped_column(Float, default=0.0)
     avg_net_pips: Mapped[float] = mapped_column(Float, default=0.0)
     drift_warning: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class StrategyState(Base):
@@ -179,13 +179,13 @@ class StrategyState(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     active_profile: Mapped[str] = mapped_column(String(32), default="intraday", unique=True)
     source: Mapped[str] = mapped_column(String(16), default="default")  # manual|adaptive|default
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ExplainabilityAudit(Base):
     __tablename__ = "explainability_audit"
     id: Mapped[int] = mapped_column(primary_key=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     pair: Mapped[str] = mapped_column(String(16), index=True)
     timeframe: Mapped[str] = mapped_column(String(8), index=True)
     regime: Mapped[str] = mapped_column(String(32))
@@ -202,7 +202,7 @@ class MaintenanceRun(Base):
     __tablename__ = "maintenance_runs"
     id: Mapped[int] = mapped_column(primary_key=True)
     job_type: Mapped[str] = mapped_column(String(64), index=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="running")
     rows_cleaned: Mapped[int] = mapped_column(Integer, default=0)
@@ -218,7 +218,7 @@ class VersionRegistry(Base):
     adaptation_version: Mapped[str] = mapped_column(String(32), default="adapt-1")
     discipline_version: Mapped[str] = mapped_column(String(32), default="disc-1")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ExperimentRun(Base):
@@ -240,7 +240,7 @@ class ExperimentRun(Base):
     replay_metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     comparison_results: Mapped[dict] = mapped_column(JSON, default=dict)
     regression_analysis: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class HistoricalCandle(Base):
@@ -257,7 +257,7 @@ class HistoricalCandle(Base):
     source: Mapped[str] = mapped_column(String(32), default="twelve_data")
     integrity_flags: Mapped[dict] = mapped_column(JSON, default=dict)
     dataset_version: Mapped[str] = mapped_column(String(32), default="ds-v1")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class IngestionRun(Base):
@@ -273,7 +273,7 @@ class IngestionRun(Base):
     retries: Mapped[int] = mapped_column(Integer, default=0)
     source_reliability: Mapped[float] = mapped_column(Float, default=0.0)
     status: Mapped[str] = mapped_column(String(16), default="completed")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ReplaySession(Base):
@@ -289,7 +289,7 @@ class ReplaySession(Base):
     state: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(16), default="running")
     dataset_snapshot: Mapped[str] = mapped_column(String(64), default="ds-v1")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class PortfolioReplaySession(Base):
@@ -308,7 +308,7 @@ class PortfolioReplaySession(Base):
     risk_state: Mapped[dict] = mapped_column(JSON, default=dict)
     replay_session_id: Mapped[int | None] = mapped_column(ForeignKey("replay_sessions.id"), nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="running")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ResearchTask(Base):
@@ -325,7 +325,7 @@ class ResearchTask(Base):
     warnings: Mapped[list] = mapped_column(JSON, default=list)
     recommendations: Mapped[list] = mapped_column(JSON, default=list)
     evidence: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -339,7 +339,7 @@ class ResearchFinding(Base):
     evidence_refs: Mapped[list] = mapped_column(JSON, default=list)
     reproducible: Mapped[bool] = mapped_column(Boolean, default=True)
     triggered_by_task_id: Mapped[int | None] = mapped_column(ForeignKey("research_tasks.id"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ResearchWorkload(Base):
@@ -354,7 +354,7 @@ class ResearchWorkload(Base):
     worker_id: Mapped[str] = mapped_column(String(64), default="unassigned")
     resource_estimate: Mapped[dict] = mapped_column(JSON, default=dict)
     checkpoint: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -366,7 +366,7 @@ class ResearchGraphEdge(Base):
     relation: Mapped[str] = mapped_column(String(64), default="related_to")
     weight: Mapped[float] = mapped_column(Float, default=1.0)
     metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class FeatureFlagCleanupPlan(Base):
@@ -379,7 +379,7 @@ class FeatureFlagCleanupPlan(Base):
     affected_components: Mapped[list] = mapped_column(JSON, default=list)
     rollback_strategy: Mapped[str] = mapped_column(Text, default="")
     operator_approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 
@@ -396,7 +396,7 @@ class StrategicBriefing(Base):
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     recommended_actions: Mapped[list] = mapped_column(JSON, default=list)
     reproducibility_refs: Mapped[list] = mapped_column(JSON, default=list)
-    generated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    generated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class StrategicMemoryEvent(Base):
@@ -408,7 +408,7 @@ class StrategicMemoryEvent(Base):
     anomaly_timeline: Mapped[list] = mapped_column(JSON, default=list)
     repeated_pattern_key: Mapped[str] = mapped_column(String(128), default="", index=True)
     successful_mitigation: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InstitutionalWorkflow(Base):
@@ -421,8 +421,8 @@ class InstitutionalWorkflow(Base):
     linked_evidence: Mapped[list] = mapped_column(JSON, default=list)
     recommended_actions: Mapped[list] = mapped_column(JSON, default=list)
     review_history: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InstitutionalArchive(Base):
@@ -434,7 +434,7 @@ class InstitutionalArchive(Base):
     tags: Mapped[list] = mapped_column(JSON, default=list)
     evidence_refs: Mapped[list] = mapped_column(JSON, default=list)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ConstitutionalRule(Base):
@@ -443,7 +443,7 @@ class ConstitutionalRule(Base):
     rule_key: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     rule_text: Mapped[str] = mapped_column(Text)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class GovernanceIncident(Base):
@@ -453,7 +453,7 @@ class GovernanceIncident(Base):
     severity: Mapped[str] = mapped_column(String(32), index=True)  # info|warning|critical|constitutional_risk
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RecommendationLifecycle(Base):
@@ -465,8 +465,8 @@ class RecommendationLifecycle(Base):
     contradicted: Mapped[bool] = mapped_column(Boolean, default=False)
     governance_concern: Mapped[bool] = mapped_column(Boolean, default=False)
     changes: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class StrategicAssumption(Base):
@@ -476,11 +476,11 @@ class StrategicAssumption(Base):
     supporting_evidence: Mapped[list] = mapped_column(JSON, default=list)
     contradictory_evidence: Mapped[list] = mapped_column(JSON, default=list)
     historical_confidence: Mapped[float] = mapped_column(Float, default=0.7)
-    last_validation_date: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    last_validation_date: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     replay_coverage: Mapped[float] = mapped_column(Float, default=0.5)
     regimes_affected: Mapped[list] = mapped_column(JSON, default=list)
     active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ContradictionWorkflow(Base):
@@ -493,7 +493,7 @@ class ContradictionWorkflow(Base):
     recommendation_deprecation_candidates: Mapped[list] = mapped_column(JSON, default=list)
     stale_strategy_retirement_candidates: Mapped[list] = mapped_column(JSON, default=list)
     review_history: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class EvolutionLineage(Base):
@@ -506,7 +506,7 @@ class EvolutionLineage(Base):
     affected_narratives: Mapped[list] = mapped_column(JSON, default=list)
     affected_replay_validity: Mapped[list] = mapped_column(JSON, default=list)
     compatibility_notes: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InstitutionalMigration(Base):
@@ -517,7 +517,7 @@ class InstitutionalMigration(Base):
     reversible: Mapped[bool] = mapped_column(Boolean, default=True)
     operator_approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     status: Mapped[str] = mapped_column(String(32), default="pending_approval", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class EvolutionPlan(Base):
@@ -532,7 +532,7 @@ class EvolutionPlan(Base):
     survivability_impact: Mapped[str] = mapped_column(String(32), default="medium")
     rollback_strategy: Mapped[str] = mapped_column(Text, default="")
     operator_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RenewalWorkflow(Base):
@@ -545,7 +545,7 @@ class RenewalWorkflow(Base):
     reproducible: Mapped[bool] = mapped_column(Boolean, default=True)
     reversible: Mapped[bool] = mapped_column(Boolean, default=True)
     metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MetaCoordinationEvent(Base):
@@ -554,7 +554,7 @@ class MetaCoordinationEvent(Base):
     event_type: Mapped[str] = mapped_column(String(80), index=True)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     severity: Mapped[str] = mapped_column(String(32), default="info", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class GlossaryTerm(Base):
@@ -567,7 +567,7 @@ class GlossaryTerm(Base):
     historical_meanings: Mapped[list] = mapped_column(JSON, default=list)
     replay_version_relevance: Mapped[list] = mapped_column(JSON, default=list)
     governance_impact: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ConceptLineage(Base):
@@ -580,7 +580,7 @@ class ConceptLineage(Base):
     retired_meanings: Mapped[list] = mapped_column(JSON, default=list)
     successor_concepts: Mapped[list] = mapped_column(JSON, default=list)
     confidence_evolution: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MissionAnchor(Base):
@@ -591,7 +591,7 @@ class MissionAnchor(Base):
     long_horizon_intent: Mapped[str] = mapped_column(Text, default="")
     reset_intent: Mapped[str] = mapped_column(Text, default="")
     anti_drift_confirmation: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MissionTimelineEvent(Base):
@@ -600,7 +600,7 @@ class MissionTimelineEvent(Base):
     event_type: Mapped[str] = mapped_column(String(80), index=True)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     severity: Mapped[str] = mapped_column(String(32), default="info", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class TemporalEvent(Base):
@@ -609,7 +609,7 @@ class TemporalEvent(Base):
     event_type: Mapped[str] = mapped_column(String(80), index=True)
     timing_classification: Mapped[str] = mapped_column(String(24), index=True)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RhythmObservation(Base):
@@ -618,7 +618,7 @@ class RhythmObservation(Base):
     rhythm_state: Mapped[str] = mapped_column(String(32), index=True)
     domain: Mapped[str] = mapped_column(String(80), index=True)
     metrics: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class TimingDecision(Base):
@@ -628,7 +628,7 @@ class TimingDecision(Base):
     recommendation: Mapped[str] = mapped_column(String(32), index=True)
     rationale: Mapped[str] = mapped_column(Text, default="")
     operator_approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class SynthesisSnapshot(Base):
@@ -637,7 +637,7 @@ class SynthesisSnapshot(Base):
     summary: Mapped[dict] = mapped_column(JSON, default=dict)
     top_priorities: Mapped[list] = mapped_column(JSON, default=list)
     suppressed_noise: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class SynthesisConflict(Base):
@@ -646,7 +646,7 @@ class SynthesisConflict(Base):
     conflict_type: Mapped[str] = mapped_column(String(120), index=True)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     severity: Mapped[str] = mapped_column(String(32), default="warning", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class StrategicFocusDecision(Base):
@@ -656,7 +656,7 @@ class StrategicFocusDecision(Base):
     review_window: Mapped[str] = mapped_column(String(80), default="within 24 hours")
     rationale: Mapped[str] = mapped_column(Text, default="")
     operator_approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ForesightWarning(Base):
@@ -666,7 +666,7 @@ class ForesightWarning(Base):
     classification: Mapped[str] = mapped_column(String(24), index=True)
     evidence: Mapped[dict] = mapped_column(JSON, default=dict)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class StrategicForecast(Base):
@@ -676,7 +676,7 @@ class StrategicForecast(Base):
     instability_probability: Mapped[float] = mapped_column(Float, default=0.0)
     time_to_risk_estimate_days: Mapped[int] = mapped_column(Integer, default=14)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InterventionPlan(Base):
@@ -685,7 +685,7 @@ class InterventionPlan(Base):
     plan: Mapped[list] = mapped_column(JSON, default=list)
     urgency: Mapped[float] = mapped_column(Float, default=0.0)
     operator_review_required: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ScenarioRun(Base):
@@ -694,7 +694,7 @@ class ScenarioRun(Base):
     scenario_name: Mapped[str] = mapped_column(String(120), index=True)
     assumptions: Mapped[list] = mapped_column(JSON, default=list)
     result: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ScenarioComparison(Base):
@@ -704,7 +704,7 @@ class ScenarioComparison(Base):
     right_option: Mapped[str] = mapped_column(String(120), index=True)
     preferred_option: Mapped[str] = mapped_column(String(120), index=True)
     reasoning: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ConsequenceAssessment(Base):
@@ -715,7 +715,7 @@ class ConsequenceAssessment(Base):
     second_order_effects: Mapped[list] = mapped_column(JSON, default=list)
     risks_introduced: Mapped[list] = mapped_column(JSON, default=list)
     risks_reduced: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class AdaptivePathway(Base):
@@ -725,7 +725,7 @@ class AdaptivePathway(Base):
     trigger_conditions: Mapped[dict] = mapped_column(JSON, default=dict)
     entry_criteria: Mapped[list] = mapped_column(JSON, default=list)
     exit_criteria: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class PathwayEvaluation(Base):
@@ -734,7 +734,7 @@ class PathwayEvaluation(Base):
     pathway_name: Mapped[str] = mapped_column(String(120), index=True)
     evaluation: Mapped[dict] = mapped_column(JSON, default=dict)
     escalation_needed: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class PathwayDecision(Base):
@@ -743,7 +743,7 @@ class PathwayDecision(Base):
     recommended_pathway: Mapped[str] = mapped_column(String(120), index=True)
     approved_by_operator: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     reversibility_notes: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class CausalAnalysis(Base):
@@ -752,7 +752,7 @@ class CausalAnalysis(Base):
     incident_type: Mapped[str] = mapped_column(String(120), index=True)
     root_causes: Mapped[list] = mapped_column(JSON, default=list)
     confidence_level: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class CausalGraphSnapshot(Base):
@@ -761,7 +761,7 @@ class CausalGraphSnapshot(Base):
     nodes: Mapped[list] = mapped_column(JSON, default=list)
     edges: Mapped[list] = mapped_column(JSON, default=list)
     notes: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InterventionEffectEstimate(Base):
@@ -771,7 +771,7 @@ class InterventionEffectEstimate(Base):
     likely_benefit: Mapped[float] = mapped_column(Float, default=0.0)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     time_horizon: Mapped[str] = mapped_column(String(80), default="1-3 weeks")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InstitutionalLesson(Base):
@@ -782,7 +782,7 @@ class InstitutionalLesson(Base):
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     affected_systems: Mapped[list] = mapped_column(JSON, default=list)
     limitations: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InterventionReview(Base):
@@ -792,7 +792,7 @@ class InterventionReview(Base):
     effectiveness_score: Mapped[float] = mapped_column(Float, default=0.0)
     operator_burden: Mapped[float] = mapped_column(Float, default=0.0)
     confidence_in_lesson: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ForecastReview(Base):
@@ -802,7 +802,7 @@ class ForecastReview(Base):
     actual: Mapped[str] = mapped_column(Text, default="")
     accuracy_score: Mapped[float] = mapped_column(Float, default=0.0)
     miss_reason: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class AssumptionLearningReview(Base):
@@ -812,7 +812,7 @@ class AssumptionLearningReview(Base):
     status: Mapped[str] = mapped_column(String(24), default="review")
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     evidence: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class EcosystemDependency(Base):
@@ -824,7 +824,7 @@ class EcosystemDependency(Base):
     current_health: Mapped[str] = mapped_column(String(24), default="unknown")
     fallback_availability: Mapped[str] = mapped_column(String(24), default="unknown")
     concentration_risk: Mapped[str] = mapped_column(String(24), default="medium")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class EcosystemRiskAssessment(Base):
@@ -832,7 +832,7 @@ class EcosystemRiskAssessment(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     scores: Mapped[dict] = mapped_column(JSON, default=dict)
     uncertainty_notes: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class FallbackPlan(Base):
@@ -842,7 +842,7 @@ class FallbackPlan(Base):
     affected_systems: Mapped[list] = mapped_column(JSON, default=list)
     temporary_workaround: Mapped[str] = mapped_column(Text, default="")
     operator_action_required: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class OperationalReview(Base):
@@ -851,7 +851,7 @@ class OperationalReview(Base):
     review_type: Mapped[str] = mapped_column(String(120), index=True)
     review_window: Mapped[str] = mapped_column(String(80), default="this week")
     urgency: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class DeferredAction(Base):
@@ -863,7 +863,7 @@ class DeferredAction(Base):
     dependencies: Mapped[list] = mapped_column(JSON, default=list)
     escalation_trigger: Mapped[str] = mapped_column(Text, default="")
     retirement_eligibility: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MaintenanceCycle(Base):
@@ -871,7 +871,7 @@ class MaintenanceCycle(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     maintenance_plan: Mapped[list] = mapped_column(JSON, default=list)
     overdue_work: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ArchitectureAudit(Base):
@@ -888,7 +888,7 @@ class ArchitectureAudit(Base):
     consolidation_opportunity: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class SubsystemOverlap(Base):
@@ -904,7 +904,7 @@ class SubsystemOverlap(Base):
     model_table_overlap: Mapped[list] = mapped_column(JSON, default=list)
     redundant_memory_systems: Mapped[list] = mapped_column(JSON, default=list)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ConsolidationProposal(Base):
@@ -919,7 +919,7 @@ class ConsolidationProposal(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 class EntropyAudit(Base):
     __tablename__ = "entropy_audits"
@@ -933,7 +933,7 @@ class EntropyAudit(Base):
     simplification_opportunity_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RefactorRecommendation(Base):
@@ -949,7 +949,7 @@ class RefactorRecommendation(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ArchitecturalRecoveryPlan(Base):
@@ -964,7 +964,7 @@ class ArchitecturalRecoveryPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class EvolutionTransitionAssessment(Base):
@@ -980,7 +980,7 @@ class EvolutionTransitionAssessment(Base):
     explainability_preservation_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ContinuityPreservationPlan(Base):
@@ -994,7 +994,7 @@ class ContinuityPreservationPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RollbackReadinessPlan(Base):
@@ -1012,7 +1012,7 @@ class RollbackReadinessPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class GovernancePolicyAudit(Base):
@@ -1028,7 +1028,7 @@ class GovernancePolicyAudit(Base):
     doctrine_drift_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class PolicyConflict(Base):
@@ -1042,7 +1042,7 @@ class PolicyConflict(Base):
     operator_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class SafeguardHarmonizationPlan(Base):
@@ -1056,7 +1056,7 @@ class SafeguardHarmonizationPlan(Base):
     operator_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class TrustCalibrationAudit(Base):
@@ -1072,7 +1072,7 @@ class TrustCalibrationAudit(Base):
     humility_integrity_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RecommendationLegitimacyReview(Base):
@@ -1089,7 +1089,7 @@ class RecommendationLegitimacyReview(Base):
     human_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class CredibilityIncident(Base):
@@ -1103,7 +1103,7 @@ class CredibilityIncident(Base):
     human_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class PurposeCoherenceAudit(Base):
@@ -1119,7 +1119,7 @@ class PurposeCoherenceAudit(Base):
     strategic_authenticity_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MeaningDriftSignal(Base):
@@ -1132,7 +1132,7 @@ class MeaningDriftSignal(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MissionAlignmentReview(Base):
@@ -1149,7 +1149,7 @@ class MissionAlignmentReview(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class WisdomAudit(Base):
@@ -1165,7 +1165,7 @@ class WisdomAudit(Base):
     strategic_patience_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class AmbiguityReview(Base):
@@ -1179,7 +1179,7 @@ class AmbiguityReview(Base):
     human_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class JudgmentDisciplineReview(Base):
@@ -1196,7 +1196,7 @@ class JudgmentDisciplineReview(Base):
     human_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class CrisisResilienceAudit(Base):
@@ -1212,7 +1212,7 @@ class CrisisResilienceAudit(Base):
     recovery_readiness_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ContinuityCrisisPlan(Base):
@@ -1227,7 +1227,7 @@ class ContinuityCrisisPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class BlackSwanReview(Base):
@@ -1244,7 +1244,7 @@ class BlackSwanReview(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class TechnicalDebtAudit(Base):
@@ -1260,7 +1260,7 @@ class TechnicalDebtAudit(Base):
     debt_paydown_priority_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class DebtItem(Base):
@@ -1276,7 +1276,7 @@ class DebtItem(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class DebtPaydownPlan(Base):
@@ -1288,7 +1288,7 @@ class DebtPaydownPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ReleaseReadinessAudit(Base):
@@ -1304,7 +1304,7 @@ class ReleaseReadinessAudit(Base):
     production_suitability_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class DeploymentRiskAssessment(Base):
@@ -1321,7 +1321,7 @@ class DeploymentRiskAssessment(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RollbackPlanReview(Base):
@@ -1335,7 +1335,7 @@ class RollbackPlanReview(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class RuntimeHealthAudit(Base):
@@ -1351,7 +1351,7 @@ class RuntimeHealthAudit(Base):
     recovery_visibility_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class EndpointHealthObservation(Base):
@@ -1368,7 +1368,7 @@ class EndpointHealthObservation(Base):
     recommended_human_review: Mapped[bool] = mapped_column(Boolean, default=False)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class DeploymentRegressionSignal(Base):
@@ -1386,7 +1386,7 @@ class DeploymentRegressionSignal(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ControlPlaneSnapshot(Base):
@@ -1402,7 +1402,7 @@ class ControlPlaneSnapshot(Base):
     consolidation_opportunity_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class OperatorFocusSummary(Base):
@@ -1416,7 +1416,7 @@ class OperatorFocusSummary(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ConsoleSprawlAudit(Base):
@@ -1432,7 +1432,7 @@ class ConsoleSprawlAudit(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class OperatorExperienceAudit(Base):
@@ -1448,7 +1448,7 @@ class OperatorExperienceAudit(Base):
     interface_coherence_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class UsabilityIssue(Base):
@@ -1462,7 +1462,7 @@ class UsabilityIssue(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InterfaceSimplificationPlan(Base):
@@ -1475,7 +1475,7 @@ class InterfaceSimplificationPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MemoryIndexEntry(Base):
@@ -1489,7 +1489,7 @@ class MemoryIndexEntry(Base):
     source_module: Mapped[str] = mapped_column(String(120), default="")
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MemoryRetrievalQuery(Base):
@@ -1504,7 +1504,7 @@ class MemoryRetrievalQuery(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ContextualRecallResult(Base):
@@ -1521,7 +1521,7 @@ class ContextualRecallResult(Base):
     recommended_human_review: Mapped[str] = mapped_column(Text, default="")
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class DistilledInsight(Base):
@@ -1534,7 +1534,7 @@ class DistilledInsight(Base):
     knowledge_durability_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class StrategicHeuristic(Base):
@@ -1546,7 +1546,7 @@ class StrategicHeuristic(Base):
     actionability_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InstitutionalAntiPattern(Base):
@@ -1560,7 +1560,7 @@ class InstitutionalAntiPattern(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class InstitutionalEvaluation(Base):
@@ -1577,7 +1577,7 @@ class InstitutionalEvaluation(Base):
     operator_clarity_score: Mapped[float] = mapped_column(Float, default=0.0)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class MaturityBenchmark(Base):
@@ -1593,7 +1593,7 @@ class MaturityBenchmark(Base):
     human_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ImprovementPlan(Base):
@@ -1604,7 +1604,7 @@ class ImprovementPlan(Base):
     human_review_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class CapabilityLifecycleAudit(Base):
@@ -1620,7 +1620,7 @@ class CapabilityLifecycleAudit(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class CapabilityRetirementCandidate(Base):
@@ -1634,7 +1634,7 @@ class CapabilityRetirementCandidate(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class ControlledEvolutionPlan(Base):
@@ -1651,7 +1651,7 @@ class ControlledEvolutionPlan(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
 
 
 class PlatformCatalogEntity(Base):
@@ -1673,8 +1673,8 @@ class PlatformCatalogEntity(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class CapabilityOwnershipRecord(Base):
@@ -1688,8 +1688,8 @@ class CapabilityOwnershipRecord(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class GoldenPathDefinition(Base):
@@ -1706,8 +1706,8 @@ class GoldenPathDefinition(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class CapabilityScorecard(Base):
@@ -1726,8 +1726,8 @@ class CapabilityScorecard(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ScorecardFinding(Base):
@@ -1742,8 +1742,8 @@ class ScorecardFinding(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ReadinessGateReview(Base):
@@ -1757,8 +1757,8 @@ class ReadinessGateReview(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class GoldenPathWorkflow(Base):
@@ -1771,8 +1771,8 @@ class GoldenPathWorkflow(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class GoldenPathChecklist(Base):
@@ -1787,8 +1787,8 @@ class GoldenPathChecklist(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class GoldenPathDeviationReview(Base):
@@ -1803,8 +1803,8 @@ class GoldenPathDeviationReview(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ChangeImpactAssessment(Base):
@@ -1820,8 +1820,8 @@ class ChangeImpactAssessment(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ChangeReviewRequirement(Base):
@@ -1833,8 +1833,8 @@ class ChangeReviewRequirement(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ChangeApprovalBrief(Base):
@@ -1851,8 +1851,8 @@ class ChangeApprovalBrief(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class PostImplementationReview(Base):
@@ -1871,8 +1871,8 @@ class PostImplementationReview(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ChangeLessonLearned(Base):
@@ -1884,8 +1884,8 @@ class ChangeLessonLearned(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ChangeImprovementAction(Base):
@@ -1898,8 +1898,8 @@ class ChangeImprovementAction(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class InstitutionalPolicy(Base):
@@ -1912,8 +1912,8 @@ class InstitutionalPolicy(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class GovernanceDoctrine(Base):
@@ -1927,8 +1927,8 @@ class GovernanceDoctrine(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class PolicyComplianceReview(Base):
@@ -1943,8 +1943,8 @@ class PolicyComplianceReview(Base):
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class InstitutionalAuditEvent(Base):
@@ -1962,8 +1962,8 @@ class InstitutionalAuditEvent(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class DecisionProvenanceRecord(Base):
@@ -1980,8 +1980,8 @@ class DecisionProvenanceRecord(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class GovernanceLineageRecord(Base):
@@ -1995,8 +1995,8 @@ class GovernanceLineageRecord(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class EvidenceRecord(Base):
@@ -2012,7 +2012,7 @@ class EvidenceRecord(Base):
     related_phase: Mapped[str] = mapped_column(String(32), default="")
     related_change: Mapped[str] = mapped_column(String(128), default="")
     related_audit_event: Mapped[str] = mapped_column(String(128), default="")
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
     owner: Mapped[str] = mapped_column(String(128), default="")
     evidence_summary: Mapped[str] = mapped_column(Text, default="")
     confidence: Mapped[str] = mapped_column(String(32), default="moderate")
@@ -2021,8 +2021,8 @@ class EvidenceRecord(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class ControlMapping(Base):
@@ -2039,8 +2039,8 @@ class ControlMapping(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))
 
 
 class EvidenceChainOfCustody(Base):
@@ -2059,5 +2059,5 @@ class EvidenceChainOfCustody(Base):
     advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     auto_apply: Mapped[bool] = mapped_column(Boolean, default=False)
     human_approval_required: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: utc_now().replace(tzinfo=None))

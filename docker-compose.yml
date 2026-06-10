@@ -35,7 +35,7 @@ services:
     volumes:
       - ./backend:/app
       - modeldata:/app/models
-    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
+    command: celery -A app.tasks.celery_app worker --loglevel=info --pool=solo --concurrency=1
 
   beat:
     build: ./backend
