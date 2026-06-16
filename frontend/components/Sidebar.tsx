@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LineChart, Radar, Newspaper, NotebookPen, FlaskConical, Brain, Settings, BarChart3, Activity, ClipboardCheck, Stethoscope } from "lucide-react";
+import { LineChart, Radar, Newspaper, NotebookPen, FlaskConical, Brain, Settings, BarChart3, Activity, ClipboardCheck, Stethoscope, LogIn } from "lucide-react";
 import clsx from "clsx";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: LineChart },
+  { href: "/login", label: "Access", icon: LogIn },
   { href: "/scanner", label: "Market Scanner", icon: Radar },
   { href: "/signals", label: "Signals", icon: Activity },
   { href: "/signals/review", label: "Signal Review", icon: ClipboardCheck },
