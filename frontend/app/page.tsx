@@ -52,11 +52,17 @@ export default function Dashboard() {
 
   const scan = async () => {
     setScanning(true);
-    try { await api(`/api/signals/scan`, { method: "POST" }); setSignals(await api<Signal[]>(`/api/signals`)); }
-    finally { setScanning(false); }
+    setError(null);
+    try {
+      await api(`/api/signals/scan`, { method: "POST" });
+      setSignals(await api<Signal[]>(`/api/signals`));
+    } catch (e: any) {
+      setError(e.message || "AI scan failed. Sign in from the Access page and try again.");
+    } finally {
+      setScanning(false);
+    }
   };
 
-  const openCount = signals.filter(s => s.id && s).length;
   const avgConf = signals.length ? Math.round(signals.reduce((a, s) => a + s.confidence, 0) / signals.length) : 0;
 
   return (
@@ -94,7 +100,6 @@ export default function Dashboard() {
           </div>
         ) : <p className="text-xs text-muted">Health check unavailable.</p>}
       </Card>
-
 
       <Card>
         <CardTitle>Adaptive intelligence</CardTitle>
