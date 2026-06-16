@@ -14,7 +14,7 @@ router = APIRouter()
 async def _ensure_state(db: AsyncSession) -> StrategyState:
     row = (await db.execute(select(StrategyState).order_by(StrategyState.id.asc()))).scalars().first()
     if not row:
-        row = StrategyState(active_profile="intraday", source="default", updated_at=utc_now())
+        row = StrategyState(active_profile="intraday", source="default", updated_at=utc_now().replace(tzinfo=None))
         db.add(row)
         await db.commit()
         await db.refresh(row)
@@ -39,6 +39,6 @@ async def select_profile(body: SelectProfile, db: AsyncSession = Depends(get_db)
     row = await _ensure_state(db)
     row.active_profile = body.profile
     row.source = body.source if body.source in {"manual", "adaptive", "default"} else "manual"
-    row.updated_at = utc_now()
+    row.updated_at = utc_now().replace(tzinfo=None)
     await db.commit()
     return {"active": {**profile_or_default(row.active_profile), "source": row.source, "updated_at": row.updated_at.isoformat()}}

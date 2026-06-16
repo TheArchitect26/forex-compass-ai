@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Float, Integer, DateTime, Boolean, JSON, Text, ForeignKey
+from sqlalchemy import String, Float, Integer, DateTime, Boolean, JSON, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 from app.utils_time import utc_now
@@ -245,6 +245,19 @@ class ExperimentRun(Base):
 
 class HistoricalCandle(Base):
     __tablename__ = "historical_candles"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "source",
+            "pair",
+            "timeframe",
+            "timestamp",
+            name=(
+                "uq_historical_candles_"
+                "source_pair_tf_ts"
+            ),
+        ),
+    )
     id: Mapped[int] = mapped_column(primary_key=True)
     pair: Mapped[str] = mapped_column(String(16), index=True)
     timeframe: Mapped[str] = mapped_column(String(8), index=True)

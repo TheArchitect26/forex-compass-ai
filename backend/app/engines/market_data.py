@@ -14,10 +14,30 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from app.config import settings
+from app.engines.mt5_market_data import mt5_market_data
 
 Timeframe = Literal["1min", "5min", "15min", "30min", "1h", "4h", "1day"]
 _TF_MIN = {"1min":1,"5min":5,"15min":15,"30min":30,"1h":60,"4h":240,"1day":1440}
 RECENT_FAILURE_TTL = timedelta(hours=6)
+
+MT5_PRIMARY_PAIRS = {
+    "EUR/USD",
+    "GBP/USD",
+    "USD/JPY",
+    "USD/CHF",
+}
+
+MT5_PRIMARY_TIMEFRAMES = {
+    "15min",
+    "1h",
+    "4h",
+}
+
+MT5_MAX_OPEN_AGE_MINUTES = {
+    "15min": 50,
+    "1h": 150,
+    "4h": 540,
+}
 
 TWELVE_DATA_FOREX_MAJORS = [
     "EUR/USD",
@@ -44,21 +64,154 @@ class MarketDataEngine:
         self._provider_last_error: datetime | None = None
         self._provider_last_error_message: str | None = None
 
-    async def close(self): await self._client.aclose()
+    async def close(self):
+        await self._client.aclose()
+
+    @staticmethod
+    def _mt5_is_primary(
+        pair: str,
+        timeframe: str,
+    ) -> bool:
+        return (
+            settings.MT5_MARKET_DATA_ENABLED
+            and pair in MT5_PRIMARY_PAIRS
+            and timeframe in MT5_PRIMARY_TIMEFRAMES
+        )
+
+    @staticmethod
+    def _market_is_closed(
+        now: pd.Timestamp,
+    ) -> bool:
+        weekday = now.weekday()
+
+        if weekday == 5:
+            return True
+
+        if weekday == 6 and now.hour < 21:
+            return True
+
+        if weekday == 4 and now.hour >= 21:
+            return True
+
+        return False
+
+    @classmethod
+    def _mt5_is_fresh(
+        cls,
+        frame: pd.DataFrame,
+        timeframe: str,
+    ) -> tuple[bool, int]:
+        if frame.empty:
+            return False, -1
+
+        latest = pd.Timestamp(
+            frame.iloc[-1]["datetime"]
+        )
+
+        if latest.tzinfo is None:
+            latest = latest.tz_localize("UTC")
+        else:
+            latest = latest.tz_convert("UTC")
+
+        now = pd.Timestamp(utc_now())
+
+        if now.tzinfo is None:
+            now = now.tz_localize("UTC")
+        else:
+            now = now.tz_convert("UTC")
+
+        age = now - latest
+
+        if age < pd.Timedelta(0):
+            return False, int(
+                age.total_seconds()
+            )
+
+        if cls._market_is_closed(now):
+            maximum_age = pd.Timedelta(
+                hours=72
+            )
+        else:
+            maximum_age = pd.Timedelta(
+                minutes=MT5_MAX_OPEN_AGE_MINUTES[
+                    timeframe
+                ]
+            )
+
+        return (
+            age <= maximum_age,
+            int(age.total_seconds()),
+        )
+
+    async def _mt5(
+        self,
+        pair: str,
+        timeframe: Timeframe,
+        limit: int,
+    ) -> pd.DataFrame:
+        frame = await mt5_market_data.ohlcv(
+            pair,
+            timeframe,
+            limit,
+        )
+
+        if len(frame) < limit:
+            raise RuntimeError(
+                f"MT5 returned only {len(frame)} "
+                f"of {limit} requested candles"
+            )
+
+        fresh, age_seconds = self._mt5_is_fresh(
+            frame,
+            timeframe,
+        )
+
+        if not fresh:
+            raise RuntimeError(
+                "MT5 candles are stale or "
+                f"future-dated: age={age_seconds}s"
+            )
+
+        return frame
+
 
     async def ohlcv(self, pair: str, timeframe: Timeframe = "1h", limit: int = 300) -> pd.DataFrame:
         key = (pair, timeframe, limit)
         if key in self._cache:
             ts, df = self._cache[key]
             if utc_now() - ts < timedelta(seconds=30):
-                source = self._last_source.get(key, "synthetic")
-                provider_cache = source == "twelve_data"
+                source = self._last_source.get(
+                    key,
+                    "synthetic",
+                )
+
+                provider_cache = source in {
+                    "mt5_hantec",
+                    "twelve_data",
+                }
+
                 self.record_symbol_result(
                     pair,
-                    status="cached" if provider_cache else "unknown",
-                    data_mode="cached" if provider_cache else "synthetic_demo",
-                    provider_name="cached_provider" if provider_cache else "synthetic",
-                    last_success=ts if provider_cache else None,
+                    status=(
+                        "cached"
+                        if provider_cache
+                        else "unknown"
+                    ),
+                    data_mode=(
+                        "cached"
+                        if provider_cache
+                        else "synthetic_demo"
+                    ),
+                    provider_name=(
+                        source
+                        if provider_cache
+                        else "synthetic"
+                    ),
+                    last_success=(
+                        ts
+                        if provider_cache
+                        else None
+                    ),
                 )
                 return df
         df = await self._fetch(pair, timeframe, limit)
@@ -69,7 +222,14 @@ class MarketDataEngine:
         key = (pair, timeframe, limit)
         source = self._last_source.get(key, "synthetic")
         warning = self._last_warning.get(key)
-        data_mode = "provider" if source == "twelve_data" else "synthetic_demo"
+        data_mode = (
+            "provider"
+            if source in {
+                "mt5_hantec",
+                "twelve_data",
+            }
+            else "synthetic_demo"
+        )
         if key in self._cache:
             ts, _ = self._cache[key]
             if utc_now() - ts < timedelta(seconds=30):
@@ -119,6 +279,9 @@ class MarketDataEngine:
             "commodities": TWELVE_DATA_COMMODITIES,
             "experimental": TWELVE_DATA_EXPERIMENTAL,
             "unsupported": TWELVE_DATA_UNSUPPORTED,
+            "mt5_primary": sorted(
+                MT5_PRIMARY_PAIRS
+            ),
         }
 
     def is_recently_failed(self, symbol: str) -> bool:
@@ -163,7 +326,12 @@ class MarketDataEngine:
 
     def provider_diagnostics(self, symbols: list[str]) -> dict:
         items = []
-        provider_configured = bool(settings.TWELVE_DATA_API_KEY.strip())
+        provider_configured = (
+            settings.MT5_MARKET_DATA_ENABLED
+            or bool(
+                settings.TWELVE_DATA_API_KEY.strip()
+            )
+        )
         unavailable = set(self.unavailable_symbols(symbols))
         for symbol in symbols:
             stored = self._symbol_results.get(symbol, {})
@@ -199,33 +367,151 @@ class MarketDataEngine:
             "no_execution": True,
         }
 
-    async def _fetch(self, pair: str, timeframe: Timeframe, limit: int) -> pd.DataFrame:
+    async def _fetch(
+        self,
+        pair: str,
+        timeframe: Timeframe,
+        limit: int,
+    ) -> pd.DataFrame:
+        key = (
+            pair,
+            timeframe,
+            limit,
+        )
+
+        mt5_error = None
+
+        if self._mt5_is_primary(
+            pair,
+            timeframe,
+        ):
+            try:
+                frame = await self._mt5(
+                    pair,
+                    timeframe,
+                    limit,
+                )
+
+                self._last_source[key] = (
+                    "mt5_hantec"
+                )
+
+                self._last_warning[key] = None
+
+                now = utc_now()
+
+                self.record_symbol_result(
+                    pair,
+                    status="supported",
+                    data_mode="provider",
+                    provider_name="mt5_hantec",
+                    last_success=now,
+                )
+
+                return frame
+
+            except Exception as exc:
+                mt5_error = str(exc)
+
+                logger.warning(
+                    "MT5 provider failed for "
+                    f"{pair} {timeframe}: "
+                    f"{exc}; trying Twelve Data"
+                )
+
         if settings.TWELVE_DATA_API_KEY:
             try:
-                df = await self._twelve(pair, timeframe, limit)
-                self._last_source[(pair, timeframe, limit)] = "twelve_data"
-                self._last_warning[(pair, timeframe, limit)] = None
+                frame = await self._twelve(
+                    pair,
+                    timeframe,
+                    limit,
+                )
+
+                self._last_source[key] = (
+                    "twelve_data"
+                )
+
+                self._last_warning[key] = (
+                    "MT5 unavailable; using "
+                    "Twelve Data fallback."
+                    if mt5_error
+                    else None
+                )
+
                 now = utc_now()
-                self.record_symbol_result(pair, status="supported", data_mode="provider", provider_name="twelve_data", last_success=now)
-                return df
-            except Exception as e:
-                logger.warning(f"Twelve Data failed: {e}; falling back to synthetic")
+
+                self.record_symbol_result(
+                    pair,
+                    status="supported",
+                    data_mode="provider",
+                    provider_name="twelve_data",
+                    last_success=now,
+                )
+
+                return frame
+
+            except Exception as exc:
+                logger.warning(
+                    "Twelve Data failed for "
+                    f"{pair} {timeframe}: "
+                    f"{exc}; using synthetic data"
+                )
+
                 now = utc_now()
-                self._last_source[(pair, timeframe, limit)] = "synthetic"
-                self._last_warning[(pair, timeframe, limit)] = "Twelve Data request failed; using synthetic demo data."
+
+                self._last_source[key] = (
+                    "synthetic"
+                )
+
+                self._last_warning[key] = (
+                    "MT5 and Twelve Data "
+                    "unavailable; using "
+                    "synthetic demo data."
+                    if mt5_error
+                    else
+                    "Twelve Data request failed; "
+                    "using synthetic demo data."
+                )
+
                 self.record_symbol_result(
                     pair,
                     status="provider_failed",
                     data_mode="synthetic_demo",
                     provider_name="twelve_data",
                     last_error=now,
-                    last_error_message=str(e),
+                    last_error_message=str(exc),
                 )
-                return self._synthetic(pair, timeframe, limit)
-        self._last_source[(pair, timeframe, limit)] = "synthetic"
-        self._last_warning[(pair, timeframe, limit)] = "TWELVE_DATA_API_KEY missing; using synthetic demo data."
-        self.record_symbol_result(pair, status="unknown", data_mode="synthetic_demo", provider_name="synthetic")
-        return self._synthetic(pair, timeframe, limit)
+
+                return self._synthetic(
+                    pair,
+                    timeframe,
+                    limit,
+                )
+
+        self._last_source[key] = "synthetic"
+
+        self._last_warning[key] = (
+            "MT5 unavailable and "
+            "TWELVE_DATA_API_KEY missing; "
+            "using synthetic demo data."
+            if mt5_error
+            else
+            "TWELVE_DATA_API_KEY missing; "
+            "using synthetic demo data."
+        )
+
+        self.record_symbol_result(
+            pair,
+            status="unknown",
+            data_mode="synthetic_demo",
+            provider_name="synthetic",
+        )
+
+        return self._synthetic(
+            pair,
+            timeframe,
+            limit,
+        )
 
     async def _twelve(self, pair: str, timeframe: Timeframe, limit: int) -> pd.DataFrame:
         url = "https://api.twelvedata.com/time_series"
@@ -235,6 +521,7 @@ class MarketDataEngine:
             "outputsize": limit,
             "apikey": settings.TWELVE_DATA_API_KEY,
             "format": "JSON",
+            "timezone": "UTC",
         }
         r = await self._client.get(url, params=params)
         r.raise_for_status()
@@ -242,7 +529,10 @@ class MarketDataEngine:
         if "values" not in data:
             raise RuntimeError(f"Twelve Data error: {data}")
         df = pd.DataFrame(data["values"])
-        df["datetime"] = pd.to_datetime(df["datetime"])
+        df["datetime"] = (
+            pd.to_datetime(df["datetime"], utc=True)
+            .dt.tz_convert(None)
+        )
         for c in ("open", "high", "low", "close"):
             df[c] = df[c].astype(float)
         df["volume"] = df.get("volume", 0)

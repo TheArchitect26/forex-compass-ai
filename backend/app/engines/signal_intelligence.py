@@ -24,13 +24,29 @@ INDICATORS_USED = [
 ]
 
 
-async def analyze_pair(pair: str) -> dict:
+async def analyze_pair(pair: str, *, force_trade: bool = False) -> dict:
     htf = await market_data.ohlcv(pair, "4h", 200)
     mtf = await market_data.ohlcv(pair, "1h", 200)
     ltf = await market_data.ohlcv(pair, "15min", 200)
 
-    source_info = market_data.source_info(pair, "15min", 200)
-    data_source = "real" if source_info.get("source") == "twelve_data" else "synthetic"
+    source_info = market_data.source_info(
+        pair,
+        "15min",
+        200,
+    )
+
+    provider_source = source_info.get(
+        "source"
+    )
+
+    data_source = (
+        "real"
+        if provider_source in {
+            "mt5_hantec",
+            "twelve_data",
+        }
+        else "synthetic"
+    )
 
     tech_htf = technical.summary(htf)
     tech_mtf = technical.summary(mtf)
@@ -52,8 +68,29 @@ async def analyze_pair(pair: str) -> dict:
     raw_conf = confluence["confidence"]
     confluence["confidence"] = max(5.0, min(100.0, raw_conf * ((trend_adj + rsi_adj) / 2)))
     direction = confluence["direction"]
+    natural_direction = direction
+    forced_training_direction = False
 
-    levels = suggest_levels(ltf, "BUY" if direction == "HOLD" else direction)
+    if force_trade and direction == "HOLD":
+        bull_score = confluence["bull_score"]
+        bear_score = confluence["bear_score"]
+
+        if bull_score > bear_score:
+            direction = "BUY"
+        elif bear_score > bull_score:
+            direction = "SELL"
+        else:
+            momentum = tech_ltf.get("momentum")
+            ltf_trend = tech_ltf.get("trend")
+            direction = (
+                "BUY"
+                if momentum == "up" or ltf_trend == "bullish"
+                else "SELL"
+            )
+
+        forced_training_direction = True
+
+    levels = suggest_levels(ltf, direction)
     invalidation_price = levels["sl"]
     risk_level, strength, risk_warnings = assess_risk_and_strength(
         direction=direction,
@@ -66,7 +103,16 @@ async def analyze_pair(pair: str) -> dict:
     if data_source == "synthetic":
         risk_warnings.append(source_info.get("warning") or "Synthetic/demo market data is active")
 
-    reason_summary = f"{direction} based on confluence: {confluence['bull_score']} bullish vs {confluence['bear_score']} bearish factors."
+    training_note = (
+        f" Training exploration forced {direction} from natural "
+        f"{natural_direction}; simulated paper trade only."
+        if forced_training_direction
+        else ""
+    )
+    reason_summary = (
+        f"{direction} based on confluence: {confluence['bull_score']} bullish "
+        f"vs {confluence['bear_score']} bearish factors.{training_note}"
+    )
 
     reasoning = {
         "technical": {"htf": tech_htf, "mtf": tech_mtf, "ltf": tech_ltf},
@@ -74,6 +120,17 @@ async def analyze_pair(pair: str) -> dict:
         "regime": market_regime,
         "regime_details": regime_details,
         "adaptive_weighting": adaptive,
+        "confluence_scores": {
+            "bull": confluence["bull_score"],
+            "bear": confluence["bear_score"],
+        },
+        "training_exploration": {
+            "enabled": force_trade,
+            "natural_direction": natural_direction,
+            "forced_direction": direction if forced_training_direction else None,
+            "forced": forced_training_direction,
+            "paper_trade_only": True,
+        },
         "patterns": patterns,
         "sentiment": senti,
         "confirmations": confluence["confirmations"],

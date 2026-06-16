@@ -35,6 +35,24 @@ class RetrySymbols(BaseModel):
     symbols: list[str]
 
 
+def _preferred_provider_name(
+    symbol: str,
+) -> str:
+    mt5_symbols = set(
+        market_data
+        .symbol_presets()
+        .get("mt5_primary", [])
+    )
+
+    if symbol in mt5_symbols:
+        return (
+            "mt5_hantec_primary_"
+            "twelve_data_fallback"
+        )
+
+    return "twelve_data"
+
+
 @router.get("")
 async def list_signals(db: AsyncSession = Depends(get_db), limit: int = 50):
     rows = (await db.execute(select(Signal).order_by(desc(Signal.created_at)).limit(limit))).scalars().all()
@@ -48,7 +66,27 @@ async def status(db: AsyncSession = Depends(get_db)):
     real_provider_configured = has_real_market_provider()
     production_like = is_production_like()
     demo_only = not real_provider_configured
-    data_mode = "twelve_data" if real_provider_configured else "synthetic_demo"
+
+    mt5_configured = (
+        settings.MT5_MARKET_DATA_ENABLED
+    )
+
+    twelve_data_configured = bool(
+        settings.TWELVE_DATA_API_KEY.strip()
+    )
+
+    if mt5_configured and twelve_data_configured:
+        data_mode = (
+            "mt5_primary_"
+            "twelve_data_fallback"
+        )
+    elif mt5_configured:
+        data_mode = "mt5_primary"
+    elif twelve_data_configured:
+        data_mode = "twelve_data"
+    else:
+        data_mode = "synthetic_demo"
+
     live_data_ready = real_provider_configured
     execution_ready = False
     blocked_synthetic = synthetic_buy_sell_blocked() or (
@@ -65,7 +103,15 @@ async def status(db: AsyncSession = Depends(get_db)):
         "data_mode": data_mode,
         "market_data": {
             "mode": data_mode,
-            "twelve_data_configured": real_provider_configured,
+            "mt5_configured": mt5_configured,
+            "mt5_primary_symbols": (
+                market_data
+                .symbol_presets()
+                .get("mt5_primary", [])
+            ),
+            "twelve_data_configured": (
+                twelve_data_configured
+            ),
             "demo_only": demo_only,
         },
         "synthetic_buy_sell_blocked": blocked_synthetic,
@@ -107,7 +153,7 @@ async def scan(body: ScanRequest | None = None, db: AsyncSession = Depends(get_d
             p,
             status="unsupported" if p in market_data.symbol_presets()["unsupported"] else "provider_failed",
             data_mode="unavailable",
-            provider_name="twelve_data",
+            provider_name=_preferred_provider_name(p),
             last_error_message="Symbol skipped because it is unsupported or recently failed. Use manual retry for recently failed symbols.",
         )
     for p in scan_symbols:
@@ -121,7 +167,10 @@ async def scan(body: ScanRequest | None = None, db: AsyncSession = Depends(get_d
                     p,
                     status="provider_failed",
                     data_mode="unavailable",
-                    provider_name=sig.get("provider_name") or "twelve_data",
+                    provider_name=(
+                        sig.get("provider_name")
+                        or _preferred_provider_name(p)
+                    ),
                     last_error=utc_now(),
                     last_error_message=sig.get("warning") or "Provider data unavailable during scan.",
                 )
@@ -142,13 +191,22 @@ async def scan(body: ScanRequest | None = None, db: AsyncSession = Depends(get_d
                     provider_name=sig.get("provider_name") or "cached_provider",
                     last_success=utc_now(),
                 )
-            elif sig.get("data_source") == "real" or sig.get("provider_name") == "twelve_data":
+            elif (
+                sig.get("data_source") == "real"
+                or sig.get("provider_name") in {
+                    "mt5_hantec",
+                    "twelve_data",
+                }
+            ):
                 real_count += 1
                 market_data.record_symbol_result(
                     p,
                     status="supported",
                     data_mode=sig.get("data_mode") or "provider",
-                    provider_name=sig.get("provider_name") or "twelve_data",
+                    provider_name=(
+                        sig.get("provider_name")
+                        or _preferred_provider_name(p)
+                    ),
                     last_success=utc_now(),
                 )
     await db.commit()

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.config import settings
 from app.engines.market_data import market_data
 from app.engines.pips import pips_from_price_move
+from app.engines.adaptive import record_outcome
 from app.models import HistoricalCandle, Signal, SignalOutcome, SignalScanContext, ValidationRun
 from app.utils_time import as_utc, utc_now
 
@@ -79,6 +80,7 @@ async def validate_pending_outcomes(db) -> dict:
         "missing_data": 0,
         "wins": 0,
         "losses": 0,
+        "learning_updates": 0,
     }
     try:
         rows = (await db.execute(select(Signal).order_by(Signal.created_at.desc()).limit(300))).scalars().all()
@@ -160,6 +162,17 @@ async def validate_pending_outcomes(db) -> dict:
             else:
                 counts["provider_pending"] += 1
 
+            if result["outcome"] in {"win", "loss"}:
+                signal.closed_at = utc_now().replace(tzinfo=None)
+                signal.pnl_pips = outcome_row.net_result_pips
+                learning_result = await record_outcome(
+                    db,
+                    signal,
+                    commit=False,
+                )
+                if not learning_result.get("skipped"):
+                    counts["learning_updates"] += 1
+
         run.status = "completed"
         run.signals_checked = counts["checked"]
         run.outcomes_updated = counts["validated"]
@@ -198,21 +211,38 @@ async def _ensure_outcome_row(db, signal: Signal) -> SignalOutcome:
 async def _future_candles(db, signal: Signal, context: SignalScanContext | None) -> list[dict]:
     timeframe = signal.timeframe if signal.timeframe in VALIDATION_TIMEFRAMES else "15min"
     horizon = settings.OUTCOME_VALIDATION_HORIZON_CANDLES
-    start = as_utc(signal.created_at)
-    end = start + timedelta(minutes=TF_MINUTES[timeframe] * max(1, horizon + 1))
+    start_utc = as_utc(signal.created_at)
+    end_utc = start_utc + timedelta(
+        minutes=TF_MINUTES[timeframe] * max(1, horizon + 1)
+    )
+    validation_end_utc = min(end_utc, utc_now())
+    start_db = start_utc.replace(tzinfo=None)
+    validation_end_db = validation_end_utc.replace(tzinfo=None)
     stored = (await db.execute(
-        select(HistoricalCandle)
+        select(
+            HistoricalCandle.timestamp,
+            func.max(HistoricalCandle.high).label("high"),
+            func.min(HistoricalCandle.low).label("low"),
+        )
         .where(
             HistoricalCandle.pair == signal.pair,
             HistoricalCandle.timeframe == timeframe,
-            HistoricalCandle.timestamp > start,
-            HistoricalCandle.timestamp <= end,
+            HistoricalCandle.timestamp > start_db,
+            HistoricalCandle.timestamp <= validation_end_db,
         )
+        .group_by(HistoricalCandle.timestamp)
         .order_by(HistoricalCandle.timestamp.asc())
         .limit(horizon)
-    )).scalars().all()
+    )).all()
     if stored:
-        return [{"time": c.timestamp, "high": c.high, "low": c.low} for c in stored]
+        return [
+            {
+                "time": row.timestamp,
+                "high": float(row.high),
+                "low": float(row.low),
+            }
+            for row in stored
+        ]
 
     provider_name = context.provider_name if context else ""
     if provider_name not in {"twelve_data", "cached_provider"}:
@@ -224,12 +254,12 @@ async def _future_candles(db, signal: Signal, context: SignalScanContext | None)
     candles = []
     for row in df.itertuples():
         ts = row.datetime.to_pydatetime() if hasattr(row.datetime, "to_pydatetime") else row.datetime
-        if start < as_utc(ts) <= end:
+        if start_utc < as_utc(ts) <= validation_end_utc:
             candles.append({"time": ts, "high": float(row.high), "low": float(row.low)})
             db.add(HistoricalCandle(
                 pair=signal.pair,
                 timeframe=timeframe,
-                timestamp=ts,
+                timestamp=as_utc(ts).replace(tzinfo=None),
                 open=float(row.open),
                 high=float(row.high),
                 low=float(row.low),

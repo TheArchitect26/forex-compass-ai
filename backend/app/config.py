@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 
     # Auth
     JWT_SECRET: str = ""
+    MT5_INGEST_API_KEY: str = ""
+    MT5_TIMESTAMP_OFFSET_MINUTES: int = -180
+    MT5_MARKET_DATA_ENABLED: bool = True
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ALLOW_ANONYMOUS_AUTH: bool = False
@@ -80,7 +83,10 @@ def is_production_like() -> bool:
 
 
 def has_real_market_provider() -> bool:
-    return bool(settings.TWELVE_DATA_API_KEY.strip())
+    return (
+        settings.MT5_MARKET_DATA_ENABLED
+        or bool(settings.TWELVE_DATA_API_KEY.strip())
+    )
 
 
 def synthetic_buy_sell_blocked() -> bool:
