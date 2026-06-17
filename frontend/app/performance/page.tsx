@@ -18,6 +18,9 @@ export default function PerformancePage() {
   const [pair, setPair] = useState("");
   const [timeframe, setTimeframe] = useState("");
   const [includeSynthetic, setIncludeSynthetic] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [validating, setValidating] = useState(false);
+  const [replaying, setReplaying] = useState(false);
 
   const load = async () => {
     const q = `?include_synthetic=${includeSynthetic}&pair=${encodeURIComponent(pair)}&timeframe=${encodeURIComponent(timeframe)}`;
@@ -33,10 +36,50 @@ export default function PerformancePage() {
     setIntegrity(await api(`/api/data/integrity`));
   };
 
-  useEffect(() => { load(); }, [pair, timeframe, includeSynthetic]);
+  useEffect(() => {
+    load().catch((error) => {
+      setActionError(error instanceof Error ? error.message : "Failed to load performance data.");
+    });
+  }, [pair, timeframe, includeSynthetic]);
 
-  const validateNow = async () => { await api(`/api/signals/validate-outcomes`, { method: "POST" }); await load(); };
-  const replayNow = async () => { const payload = { experiment_id: `exp-${Date.now()}`, name: "Sandbox Replay", target_logic_area: "weighting", pair: pair || "EUR/USD", timeframe: timeframe || "1h", strategy_profile: "intraday" }; const out = await api(`/api/experiments/run-replay`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); setReplayResult(out); await load(); };
+  const validateNow = async () => {
+    setValidating(true);
+    setActionError(null);
+    try {
+      await api(`/api/signals/validate-outcomes`, { method: "POST" });
+      await load();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Validation failed.");
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const replayNow = async () => {
+    setReplaying(true);
+    setActionError(null);
+    try {
+      const payload = {
+        experiment_id: `exp-${Date.now()}`,
+        name: "Sandbox Replay",
+        target_logic_area: "weighting",
+        pair: pair || "EUR/USD",
+        timeframe: timeframe || "1h",
+        strategy_profile: "intraday",
+      };
+      const out = await api(`/api/experiments/run-replay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setReplayResult(out);
+      await load();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Replay failed.");
+    } finally {
+      setReplaying(false);
+    }
+  };
 
   if (!data) return <p className="text-sm text-muted">Loading…</p>;
   const latest = runs[0];
@@ -44,13 +87,18 @@ export default function PerformancePage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Signal Assistant Performance</h1>
-      <div className="flex gap-2 items-center text-xs">
+      <div className="flex gap-2 items-center text-xs flex-wrap">
         <input className="bg-panel2 border border-border rounded px-2 py-1" placeholder="Pair (EUR/USD)" value={pair} onChange={e => setPair(e.target.value)} />
         <input className="bg-panel2 border border-border rounded px-2 py-1" placeholder="Timeframe (15min)" value={timeframe} onChange={e => setTimeframe(e.target.value)} />
         <label className="flex items-center gap-1"><input type="checkbox" checked={includeSynthetic} onChange={e => setIncludeSynthetic(e.target.checked)} /> include synthetic</label>
-        <button onClick={validateNow} className="px-3 py-1 rounded bg-accent text-bg">Validate outcomes now</button>
-        <button onClick={replayNow} className="px-3 py-1 rounded bg-panel2 border border-border">Run replay</button>
+        <button onClick={validateNow} disabled={validating} className="px-3 py-1 rounded bg-accent text-bg disabled:opacity-50">
+          {validating ? "Validating…" : "Validate outcomes now"}
+        </button>
+        <button onClick={replayNow} disabled={replaying} className="px-3 py-1 rounded bg-panel2 border border-border disabled:opacity-50">
+          {replaying ? "Running replay…" : "Run replay"}
+        </button>
       </div>
+      {actionError && <div className="text-xs text-bear bg-bear/10 border border-bear/40 rounded p-2">{actionError}</div>}
       {latest && <div className="text-xs text-muted">Latest validation run: {latest.status} • checked {latest.signals_checked} • updated {latest.outcomes_updated}</div>}
       {maint && <div className="text-xs text-muted">Engine/schema: {maint.schema_version} • migrations: {(maint.migrations||[]).join(", ")}</div>}
       {versions?.active && <div className="text-xs text-muted">Active engine version: {versions.active.engine_version} / {versions.active.weighting_version}</div>}
