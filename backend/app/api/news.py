@@ -12,3 +12,8 @@ async def calendar():
 @router.get("/headlines")
 async def headlines():
     return await news_engine.headlines()
+
+
+@router.get("/status")
+async def status():
+    return news_engine.provider_status()
