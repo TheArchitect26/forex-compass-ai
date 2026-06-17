@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     TWELVE_DATA_API_KEY: str = ""
     ALPHA_VANTAGE_API_KEY: str = ""
     FINNHUB_API_KEY: str = ""
+    FMP_API_KEY: str = ""
     POLYGON_API_KEY: str = ""
     TRADING_ECONOMICS_KEY: str = ""
     NEWS_API_KEY: str = ""
