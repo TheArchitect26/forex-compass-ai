@@ -21,6 +21,15 @@ export function clearAuthToken(): void {
   window.localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
+function redirectToLogin(path: string): Promise<never> {
+  if (typeof window !== "undefined") {
+    const next = `${window.location.pathname}${window.location.search}`;
+    window.location.assign(`/login?next=${encodeURIComponent(next)}`);
+  }
+
+  return new Promise<never>(() => {});
+}
+
 export async function api<T = any>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   const token = getAuthToken();
@@ -44,7 +53,12 @@ export async function api<T = any>(path: string, init?: RequestInit): Promise<T>
 
     if (r.status === 401) {
       clearAuthToken();
-      detail = detail || ": Authentication required. Sign in at /login";
+
+      if (!path.startsWith("/api/auth/")) {
+        return redirectToLogin(path);
+      }
+
+      detail = detail || ": Invalid credentials";
     }
 
     throw new Error(`${r.status} ${r.statusText}${detail}`);
