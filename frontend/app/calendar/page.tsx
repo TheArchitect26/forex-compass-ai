@@ -31,10 +31,10 @@ export default function CalendarPage() {
   }, []);
 
   const calendarProvider = status?.calendar?.configured
-    ? "Trading Economics"
+    ? "FMP"
     : "Not configured";
-  const headlineProvider = status?.headlines?.finnhub_configured
-    ? "Finnhub + RSS"
+  const headlineProvider = status?.headlines?.alpha_vantage_configured || status?.headlines?.finnhub_configured
+    ? "Alpha Vantage + Finnhub + RSS"
     : "RSS fallback";
 
   return (
@@ -99,8 +99,8 @@ export default function CalendarPage() {
             {events.length === 0 && (
               <li className="text-xs text-muted">
                 {status?.calendar?.configured
-                  ? "No upcoming events returned by the calendar provider."
-                  : "Trading Economics API is not configured yet. No placeholder events are shown."}
+                  ? "No upcoming events returned by FMP."
+                  : "FMP API is not configured yet. No placeholder events are shown."}
               </li>
             )}
           </ul>
