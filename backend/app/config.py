@@ -59,13 +59,14 @@ class Settings(BaseSettings):
         "USD/JPY": 1.2,
         "XAU/USD": 3.0,
     }
-    OUTCOME_VALIDATION_HORIZON_CANDLES: int = 24
-    OUTCOME_TAKE_PROFIT_PIPS: float = 40.0
-    OUTCOME_STOP_LOSS_PIPS: float = 25.0
+    # Faster 15-minute paper-learning benchmark: maximum two-hour outcome window.
+    OUTCOME_VALIDATION_HORIZON_CANDLES: int = 8
+    OUTCOME_TAKE_PROFIT_PIPS: float = 10.0
+    OUTCOME_STOP_LOSS_PIPS: float = 7.0
 
     # Seven-day provider-backed signal validation training. Never executes trades.
     AUTO_TRAINING_ENABLED: bool = False
-    AUTO_TRAINING_INTERVAL_MINUTES: int = 30
+    AUTO_TRAINING_INTERVAL_MINUTES: int = 15
     AUTO_TRAINING_SYMBOLS: list[str] = [
         "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD",
         "USD/CAD", "USD/CHF", "NZD/USD", "XAU/USD",
